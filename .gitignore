@@ -21,6 +21,14 @@ target/
 # OS
 .DS_Store
 
+# Local release helper (not committed — copy from teammate or regenerate)
+release.sh
+
+# Release / publish scratch output
+.release/
+packages/python/dist/
+packages/python/build/
+
 # PHP (Laravel package)
 vendor/
 .phpunit.cache/

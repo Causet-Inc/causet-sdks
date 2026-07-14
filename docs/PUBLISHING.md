@@ -78,3 +78,20 @@ Register `causet/laravel-sdk` at [packagist.org](https://packagist.org) pointing
 - [ ] PyPI trusted publisher + `pypi` environment
 - [ ] All package versions match release tag
 - [ ] GitHub Release `v0.1.0` created
+
+## Local release script
+
+`release.sh` lives at the repo root and is **gitignored** (local tooling). Bootstrap:
+
+```bash
+cp scripts/release.sh.example release.sh
+chmod +x release.sh
+```
+
+```bash
+./release.sh --dry-run 0.1.0    # verify build + tests only
+./release.sh --bump 0.2.0       # bump versions, test, tag, push, GitHub release
+./release.sh 0.1.0              # release when versions already match
+```
+
+Creating the GitHub release triggers `publish-npm` and `publish-pypi` workflows automatically.
