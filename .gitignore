@@ -23,6 +23,7 @@ target/
 
 # Local release helper (not committed — copy from teammate or regenerate)
 release.sh
+scripts/release.sh
 
 # Release / publish scratch output
 .release/
@@ -34,3 +35,4 @@ vendor/
 .phpunit.cache/
 .phpunit.result.cache
 coverage.xml
+scripts/release.sh.example
