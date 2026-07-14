@@ -1,0 +1,74 @@
+name: Publish npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Run npm publish with --dry-run (no upload)
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-npm-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build and publish @causet/* packages
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Audit
+        run: npm audit --audit-level=high
+
+      - name: Verify release tag matches package versions
+        if: github.event_name == 'release'
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          for pkg in packages/core packages/js packages/node packages/next; do
+            PKG_VERSION=$(node -p "require('./${pkg}/package.json').version")
+            if [ "$PKG_VERSION" != "$VERSION" ]; then
+              echo "::error::${pkg}/package.json version (${PKG_VERSION}) does not match release tag (${VERSION})"
+              exit 1
+            fi
+          done
+
+      - name: Publish packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          ARGS="--access public --provenance"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+
+          # Dependency order: core must publish before dependents.
+          npm publish -w @causet/sdk-core $ARGS
+          npm publish -w @causet/sdk $ARGS
+          npm publish -w @causet/sdk-node $ARGS
+          npm publish -w @causet/sdk-next $ARGS

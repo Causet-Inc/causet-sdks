@@ -1,0 +1,46 @@
+{
+  "name": "causet/laravel-sdk",
+  "description": "Laravel SDK for the Causet SaaS API — intents, queries, SSE",
+  "type": "library",
+  "license": "MIT",
+  "version": "0.1.0",
+  "support": {
+    "issues": "https://github.com/Causet-Inc/causet-sdks/issues",
+    "source": "https://github.com/Causet-Inc/causet-sdks"
+  },
+  "require": {
+    "php": "^8.2",
+    "guzzlehttp/guzzle": "^7.8",
+    "illuminate/support": "^11.0|^12.0"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^9.0|^10.0",
+    "phpunit/phpunit": "^11.0",
+    "mockery/mockery": "^1.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "Causet\\Laravel\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Causet\\Laravel\\Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Causet\\Laravel\\CausetServiceProvider"
+      ],
+      "aliases": {
+        "Causet": "Causet\\Laravel\\Facades\\Causet"
+      }
+    }
+  },
+  "scripts": {
+    "test": "phpunit --coverage-text --coverage-filter=src",
+    "test:coverage": "XDEBUG_MODE=coverage phpunit --coverage-text --coverage-filter=src --coverage-clover=coverage.xml"
+  },
+  "minimum-stability": "stable"
+}

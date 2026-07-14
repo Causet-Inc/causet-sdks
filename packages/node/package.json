@@ -1,0 +1,43 @@
+{
+  "name": "@causet/sdk-node",
+  "version": "0.1.0",
+  "description": "Node.js SDK for Causet (uses global fetch, WebSocket from ws optional)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Causet-Inc/causet-sdks.git",
+    "directory": "packages/node"
+  },
+  "bugs": {
+    "url": "https://github.com/Causet-Inc/causet-sdks/issues"
+  },
+  "homepage": "https://github.com/Causet-Inc/causet-sdks/tree/main/packages/node#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@causet/sdk-core": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.4"
+  }
+}

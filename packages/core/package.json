@@ -1,0 +1,38 @@
+{
+  "name": "@causet/sdk-core",
+  "version": "0.1.0",
+  "description": "Core Causet SaaS API client — intents, queries, SSE, WebSocket",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Causet-Inc/causet-sdks.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/Causet-Inc/causet-sdks/issues"
+  },
+  "homepage": "https://github.com/Causet-Inc/causet-sdks/tree/main/packages/core#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.4"
+  }
+}
