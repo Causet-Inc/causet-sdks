@@ -1,0 +1,283 @@
+#!/usr/bin/env bash
+# Template for local release.sh (gitignored). Install:
+#   cp scripts/release.sh.example release.sh && chmod +x release.sh
+#
+# Build, verify, tag, and publish a causet-sdks release.
+#
+# Usage:
+#   ./release.sh 0.2.0              # verify + tag + GitHub release (versions must match)
+#   ./release.sh --bump 0.2.0         # bump all package versions, commit, then release
+#   ./release.sh --dry-run 0.2.0      # verify only, no git tag or GitHub release
+#   ./release.sh --skip-tests 0.2.0   # skip test suites (not recommended)
+#
+# Prerequisites: npm, node 20+, python 3.10+, go, mvn (optional), gh CLI, clean git tree
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+log()  { printf '%b\n' "${GREEN}==>${NC} $*"; }
+warn() { printf '%b\n' "${YELLOW}==>${NC} $*"; }
+die()  { printf '%b\n' "${RED}error:${NC} $*" >&2; exit 1; }
+
+VERSION=""
+BUMP=false
+DRY_RUN=false
+SKIP_TESTS=false
+PUSH=true
+
+usage() {
+  sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'
+  echo ""
+  echo "Options:"
+  echo "  --bump         Write VERSION into all package manifests and commit"
+  echo "  --dry-run      Build and test only; do not tag or create GitHub release"
+  echo "  --skip-tests   Skip language test suites"
+  echo "  --no-push      Tag locally but do not push or create GitHub release"
+  echo "  -h, --help     Show this help"
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --bump) BUMP=true; shift ;;
+    --dry-run) DRY_RUN=true; shift ;;
+    --skip-tests) SKIP_TESTS=true; shift ;;
+    --no-push) PUSH=false; shift ;;
+    -h|--help) usage; exit 0 ;;
+    -*) die "unknown option: $1 (try --help)" ;;
+    *)
+      [[ -z "$VERSION" ]] || die "version already set: $VERSION"
+      VERSION="${1#v}"
+      shift
+      ;;
+  esac
+done
+
+[[ -n "$VERSION" ]] || die "version required (e.g. ./release.sh 0.2.0)"
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]] || die "invalid semver: $VERSION"
+
+TAG="v${VERSION}"
+
+require_cmd() {
+  command -v "$1" >/dev/null 2>&1 || die "missing required command: $1"
+}
+
+bump_versions() {
+  log "Bumping package versions to ${VERSION}"
+
+  for pkg in packages/core packages/js packages/node packages/next; do
+    node -e "
+      const fs = require('fs');
+      const p = '${pkg}/package.json';
+      const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+      j.version = '${VERSION}';
+      fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+    "
+  done
+
+  # Python pyproject.toml
+  if [[ "$(uname)" == "Darwin" ]]; then
+    sed -i '' "s/^version = \".*\"/version = \"${VERSION}\"/" packages/python/pyproject.toml
+  else
+    sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" packages/python/pyproject.toml
+  fi
+
+  # Java pom.xml — project version only (not dependency versions)
+  node -e "
+    const fs = require('fs');
+    const p = 'packages/java/pom.xml';
+    let xml = fs.readFileSync(p, 'utf8');
+    xml = xml.replace(
+      /(<artifactId>causet-sdk<\\/artifactId>\\s*\\n\\s*<version>)[^<]+(<\\/version>)/,
+      '\$1${VERSION}\$2'
+    );
+    fs.writeFileSync(p, xml);
+  "
+
+  if [[ "$(uname)" == "Darwin" ]]; then
+    sed -i '' "s|\"version\": \".*\"|\"version\": \"${VERSION}\"|" packages/laravel/composer.json
+  else
+    sed -i "s|\"version\": \".*\"|\"version\": \"${VERSION}\"|" packages/laravel/composer.json
+  fi
+
+  git add packages/core/package.json packages/js/package.json packages/node/package.json \
+    packages/next/package.json packages/python/pyproject.toml packages/java/pom.xml \
+    packages/laravel/composer.json
+  git commit -m "chore: release ${TAG}"
+  log "Committed version bump"
+}
+
+read_version() {
+  local file="$1"
+  local kind="$2"
+  case "$kind" in
+    npm) node -p "require('./${file}').version" ;;
+    python)
+      python3 -c "import tomllib; print(tomllib.load(open('${file}','rb'))['project']['version'])"
+      ;;
+    java)
+      sed -n '/<artifactId>causet-sdk<\/artifactId>/,/<name>/p' "$file" \
+        | sed -n 's:.*<version>\(.*\)</version>.*:\1:p' | head -1
+      ;;
+    composer)
+      node -p "require('./${file}').version || ''"
+      ;;
+  esac
+}
+
+verify_versions() {
+  log "Verifying all package versions match ${VERSION}"
+
+  local mismatches=0
+  check() {
+    local label="$1" actual="$2"
+    if [[ "$actual" != "$VERSION" ]]; then
+      warn "${label}: expected ${VERSION}, got ${actual}"
+      mismatches=$((mismatches + 1))
+    fi
+  }
+
+  for pkg in packages/core packages/js packages/node packages/next; do
+    check "${pkg}/package.json" "$(read_version "${pkg}/package.json" npm)"
+  done
+  check "packages/python/pyproject.toml" "$(read_version packages/python/pyproject.toml python)"
+  check "packages/java/pom.xml" "$(read_version packages/java/pom.xml java)"
+
+  local laravel_version
+  laravel_version="$(read_version packages/laravel/composer.json composer)"
+  if [[ -n "$laravel_version" && "$laravel_version" != "$VERSION" ]]; then
+    warn "packages/laravel/composer.json: expected ${VERSION}, got ${laravel_version}"
+    mismatches=$((mismatches + 1))
+  fi
+
+  [[ $mismatches -eq 0 ]] || die "${mismatches} version mismatch(es). Use --bump ${VERSION} or fix manually."
+  log "All versions aligned"
+}
+
+run_js() {
+  log "JavaScript: install, build, test, audit"
+  require_cmd npm
+  require_cmd node
+  npm ci
+  npm run build
+  npm test
+  npm audit --audit-level=high
+}
+
+run_python() {
+  log "Python: test with 100% coverage"
+  require_cmd python3
+  local py_dir="$ROOT/packages/python"
+  local venv="$py_dir/.venv"
+  if [[ ! -d "$venv" ]]; then
+    python3 -m venv "$venv"
+  fi
+  (
+    cd "$py_dir"
+    # shellcheck disable=SC1091
+    source "$venv/bin/activate"
+    pip install -q -e ".[dev]"
+    pytest --cov=causet_sdk --cov-fail-under=100 -q
+    deactivate 2>/dev/null || true
+  )
+}
+
+run_go() {
+  if command -v go >/dev/null 2>&1; then
+    log "Go: test"
+    (cd packages/go && go test ./...)
+  else
+    warn "Go not installed — skipping Go tests"
+  fi
+}
+
+run_java() {
+  if command -v mvn >/dev/null 2>&1; then
+    log "Java: test"
+    (cd packages/java && mvn -q test)
+  else
+    warn "Maven not installed — skipping Java tests"
+  fi
+}
+
+create_github_release() {
+  require_cmd gh
+  log "Creating GitHub release ${TAG}"
+  gh release create "$TAG" \
+    --title "$TAG" \
+    --notes "$(cat <<EOF
+## Causet SDKs ${TAG}
+
+### npm
+- \`@causet/sdk-core@${VERSION}\`
+- \`@causet/sdk@${VERSION}\`
+- \`@causet/sdk-node@${VERSION}\`
+- \`@causet/sdk-next@${VERSION}\`
+
+### PyPI
+- \`causet-sdk==${VERSION}\`
+
+Publishing is triggered automatically by GitHub Actions (npm + PyPI workflows).
+EOF
+)"
+  log "Release created — check Actions for publish-npm and publish-pypi"
+}
+
+# --- main ---
+
+require_cmd git
+require_cmd node
+
+if [[ -n "$(git status --porcelain)" && "$BUMP" != true ]]; then
+  die "working tree not clean. Commit changes or use --bump to commit version bumps."
+fi
+
+if $BUMP; then
+  bump_versions
+fi
+
+verify_versions
+
+if ! $SKIP_TESTS; then
+  run_js
+  run_python
+  run_go
+  run_java
+else
+  warn "Skipping tests (--skip-tests)"
+  require_cmd npm
+  npm ci
+  npm run build
+fi
+
+log "Release build verified for ${TAG}"
+
+if $DRY_RUN; then
+  log "Dry run complete — no tag or GitHub release created"
+  exit 0
+fi
+
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+  die "tag ${TAG} already exists"
+fi
+
+log "Creating tag ${TAG}"
+git tag -a "$TAG" -m "Release ${TAG}"
+
+if $PUSH; then
+  require_cmd gh
+  log "Pushing main and tag"
+  git push origin main
+  git push origin "$TAG"
+  create_github_release
+else
+  warn "Tagged locally only (--no-push). Run: git push origin main && git push origin ${TAG}"
+fi
+
+log "Done — ${TAG}"

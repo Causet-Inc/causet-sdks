@@ -19,9 +19,4 @@
             <directory>src</directory>
         </include>
     </source>
-    <coverage>
-        <report>
-            <text outputFile="php://stdout" showUncoveredFiles="true" showOnlySummary="false"/>
-        </report>
-    </coverage>
 </phpunit>

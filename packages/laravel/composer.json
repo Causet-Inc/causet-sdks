@@ -40,7 +40,7 @@
   },
   "scripts": {
     "test": "phpunit --coverage-text --coverage-filter=src",
-    "test:ci": "phpunit",
+    "test:ci": "phpunit --no-coverage",
     "test:coverage": "XDEBUG_MODE=coverage phpunit --coverage-text --coverage-filter=src --coverage-clover=coverage.xml"
   },
   "minimum-stability": "stable"
