@@ -84,4 +84,4 @@ jobs:
           coverage: none
           tools: composer:v2
       - run: composer install --no-interaction --prefer-dist
-      - run: composer test
+      - run: composer test:ci

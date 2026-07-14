@@ -56,6 +56,34 @@ class Patch
         }
     }
 
+    public static function removePath(array &$obj, string $path): void
+    {
+        if ($path === '' || ! str_starts_with($path, '/')) {
+            return;
+        }
+
+        $keys = explode('/', substr($path, 1));
+        $last = array_pop($keys);
+        if ($last === '') {
+            return;
+        }
+
+        $current = &$obj;
+        foreach ($keys as $key) {
+            if ($key === '') {
+                continue;
+            }
+            if (! is_array($current) || ! array_key_exists($key, $current)) {
+                return;
+            }
+            $current = &$current[$key];
+        }
+
+        if (is_array($current) && ! array_is_list($current) && array_key_exists($last, $current)) {
+            unset($current[$last]);
+        }
+    }
+
     /**
      * @param  array<int, array{op?: string, path?: string, value?: mixed}>|null  $ops
      */
@@ -75,12 +103,7 @@ class Patch
             if ($type === 'replace' || $type === 'add') {
                 self::setPath($state, $path, $op['value'] ?? null);
             } elseif ($type === 'remove') {
-                $keys = explode('/', substr($path, 1));
-                $last = array_pop($keys);
-                $parent = $keys === [] ? $state : self::getPath($state, '/'.implode('/', $keys));
-                if (is_array($parent) && ! array_is_list($parent) && $last !== '') {
-                    unset($parent[$last]);
-                }
+                self::removePath($state, $path);
             }
         }
     }

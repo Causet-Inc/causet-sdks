@@ -9,10 +9,21 @@ class QueryProjectionTest extends TestCase
 {
     public function test_flatten_projection_row(): void
     {
-        $row = ['artist.name' => 'A', 'venue.name' => 'V', 'id' => 1];
+        $row = [
+            'artist_directory.name' => 'A',
+            'show_directory.show_id' => 'z7',
+            'id' => 1,
+        ];
         $flat = QueryProjection::flattenProjectionRow($row);
         $this->assertSame('A', $flat['name']);
+        $this->assertSame('z7', $flat['show_id']);
         $this->assertSame(1, $flat['id']);
+    }
+
+    public function test_flatten_projection_row_collision_last_wins(): void
+    {
+        $flat = QueryProjection::flattenProjectionRow(['artist.name' => 'A', 'venue.name' => 'V']);
+        $this->assertSame('V', $flat['name']);
     }
 
     public function test_flatten_projection_items(): void

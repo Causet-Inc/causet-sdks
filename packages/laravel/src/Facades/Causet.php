@@ -30,6 +30,6 @@ class Causet extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return CausetClient::class;
+        return \Causet\Laravel\CausetClient::class;
     }
 }
