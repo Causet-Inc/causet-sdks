@@ -22,7 +22,7 @@ on:
         options:
           - all
           - js-and-next
-        default: js-and-next
+        default: all
       otp:
         description: npm 2FA one-time password (required for republish when @causet org enforces TFA)
         required: false
