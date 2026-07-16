@@ -11,7 +11,7 @@ _REALTIME_HOST_BY_API = {
 
 
 def derive_realtime_url(api_url: str) -> str:
-    """Map SaaS API URL to causet-realtime HTTP base."""
+    """Map Causet Cloud gateway URL to realtime HTTP base."""
     trimmed = api_url.rstrip("/")
     try:
         parsed = urlparse(trimmed)

@@ -32,15 +32,19 @@ export function createServerCausetClient(overrides = {}) {
         opts.bearerToken = bearerToken;
     return new CausetClient(opts);
 }
-export async function serverEmitIntent(streamId, entityId, intentType, payload, config) {
+export async function serverSubmitIntent(streamId, entityId, intentType, payload, config) {
     const client = createServerCausetClient(config);
     await client.init();
     try {
-        return await client.emit(streamId, entityId, intentType, payload);
+        return await client.submitIntent(streamId, entityId, intentType, payload);
     }
     finally {
         client.destroy();
     }
+}
+/** @deprecated Use serverSubmitIntent(). */
+export async function serverIntent(streamId, entityId, intentType, payload, config) {
+    return serverSubmitIntent(streamId, entityId, intentType, payload, config);
 }
 export async function serverRunQuery(querySlug, input, config) {
     const client = createServerCausetClient(config);

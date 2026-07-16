@@ -1,8 +1,18 @@
 # @causet/sdk-core
 
-Core TypeScript client for the [Causet](https://causet.cloud) SaaS API. Implements intents, named queries, SSE intent streaming, WebSocket ledger patches, entity state caching, and API-key JWT exchange.
+Core TypeScript client for the [Causet](https://causet.cloud) runtime API. Implements submit-intent, named queries, SSE intent streaming, WebSocket ledger patches, entity state caching, and API-key JWT exchange.
 
 This is the shared implementation used by `@causet/sdk`, `@causet/sdk-node`, and `@causet/sdk-next`. Most applications should install one of those packages instead of core directly.
+
+## Status
+
+| | |
+| --- | --- |
+| **Source** | Available ([`packages/core`](.)) |
+| **Package distribution** | Published to npm — `@causet/sdk-core` **0.1.0** |
+| **Maturity** | Supported preview |
+| **Support** | Supported for pilots |
+| **Runtime compatibility** | Node.js 18+; browsers with `fetch`; TypeScript 5+; ESM only |
 
 ## Features
 
@@ -50,7 +60,7 @@ const client = new CausetClient({
 await client.init();
 
 // Submit an intent
-const result = await client.emit('ticket_stream', 'tkt_1', 'CREATE_TICKET', {
+const result = await client.submitIntent('ticket_stream', 'tkt_1', 'CREATE_TICKET', {
   customer_id: 'cust_1',
   subject: 'Help',
   body: 'Need assistance',
@@ -68,7 +78,7 @@ client.destroy();
 
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
-| `apiUrl` | `string` | yes | Causet SaaS base URL (e.g. `https://api.causet.cloud`) |
+| `apiUrl` | `string` | yes | Causet Cloud gateway base URL (e.g. `https://api.causet.cloud`) |
 | `platformSlug` | `string` | yes | Platform slug |
 | `appSlug` | `string` | yes | Application slug |
 | `forkId` | `string` | no | Fork id for intents, state, and streams (default `main`) |
@@ -111,28 +121,29 @@ await client.listEntities({ streamName: 'orders', limit: 50 });
 
 After a successful intent, the client applies `statePatch` from the response or refetches entity state if no patch was returned.
 
-### Intents
+### Submit an intent
 
 ```typescript
-// Synchronous HTTP submit
-const result = await client.emit(
+// Primary API — submits an intent to the runtime (not a committed event)
+const result = await client.submitIntent(
   'stream_id',
   'entity_id',
   'INTENT_TYPE',
   { key: 'value' },
-  'optional-idempotency-key',
+  'optional-idempotency-key', // intentId
 );
-// { accepted, executionId?, error?, statePatch? }
+
+// Deprecated aliases: client.intent(), client.emit()
 
 // SSE streaming progress
-await client.emitStream(
+await client.intentStream(
   'stream_id',
   'entity_id',
   'INTENT_TYPE',
   payload,
   (ev) => console.log(ev.event, ev.data),
   'optional-idempotency-key',
-  abortSignal, // optional AbortSignal
+  abortSignal,
 );
 ```
 
@@ -179,7 +190,7 @@ client.disconnectStream();              // all
 client.disconnectStream('wallet_stream'); // one
 ```
 
-Live ledger and projection events come from **causet-realtime** (not the SaaS API host). URLs are derived automatically from `apiUrl`:
+Live ledger and projection events come from the **realtime service** (not the Causet Cloud gateway host). URLs are derived automatically from `apiUrl`:
 
 | Environment | API URL | Realtime / WebSocket |
 |-------------|---------|----------------------|
@@ -403,7 +414,7 @@ import {
   ApiKeyTokenManager,
   deriveWsUrl,
   orgIdFromToken,
-  emitIntent,
+  submitIntent,
   fetchState,
   runQuery,
   submitIntentStream,
@@ -423,7 +434,7 @@ import {
 import { CausetApiError, CausetAuthError, CausetError } from '@causet/sdk-core';
 
 try {
-  await client.emit(...);
+  await client.submitIntent(...);
 } catch (e) {
   if (e instanceof CausetApiError) {
     console.error(e.statusCode, e.body);
@@ -445,7 +456,25 @@ try {
 | WebSocket | `WS` | `wss://*.realtime.causet.cloud/ws` (derived from `apiUrl`) |
 | Stream SSE | `GET` | `{realtimeUrl}/v1/platforms/{p}/applications/{a}/streams/{streamId}/events` |
 
-Full request/response schemas: [`docs/saas-cloud-api-intents-queries.md`](../../../docs/saas-cloud-api-intents-queries.md)
+## Idempotency
+
+Pass an `intentId` as the last argument to `submitIntent()` (or `intentStream()`). The runtime uses this as an idempotency key for duplicate submissions.
+
+## Timeouts and retries
+
+- API key exchange retries transient network errors (up to 4 attempts in the token manager).
+- On HTTP 401, the client force-refreshes the JWT and retries the request once.
+- `fetch` and WebSocket timeouts follow the host environment defaults; inject `fetchImpl` for custom timeout behavior.
+
+## Known limitations
+
+- ESM only — no CommonJS bundle.
+- Browser bundles must not embed API keys; use `bearerToken` or proxy through your backend.
+- `0.x` preview — breaking API changes may ship in minor releases.
+
+## Support policy
+
+**Supported for pilots** — report issues via [GitHub Issues](https://github.com/Causet-Inc/causet-sdks/issues). Platform docs: [docs.causet.io](https://docs.causet.io). See [SUPPORT.md](../../SUPPORT.md).
 
 ## Development
 

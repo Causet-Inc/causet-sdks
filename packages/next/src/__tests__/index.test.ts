@@ -6,6 +6,7 @@ describe('package exports', () => {
     expect(next.CausetProvider).toBeTypeOf('function');
     expect(next.useCausetClient).toBeTypeOf('function');
     expect(next.useCausetQuery).toBeTypeOf('function');
+    expect(next.useCausetSubmitIntent).toBeTypeOf('function');
     expect(next.useCausetIntent).toBeTypeOf('function');
     expect(next.useCausetEntity).toBeTypeOf('function');
     expect(next.CausetClient).toBeTypeOf('function');

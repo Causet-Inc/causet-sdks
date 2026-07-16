@@ -16,8 +16,8 @@ def mock_async_client():
     client.subscribe = AsyncMock(return_value=None)
     client.unsubscribe = MagicMock()
     client.get_state = MagicMock(return_value={"x": 1})
-    client.emit = AsyncMock(return_value={"accepted": True})
-    client.emit_stream = AsyncMock(return_value=None)
+    client.submit_intent = AsyncMock(return_value={"accepted": True})
+    client.intent_stream = AsyncMock(return_value=None)
     client.run_query = AsyncMock(return_value={"items": []})
     client.list_queries = AsyncMock(return_value=[{"slug": "q1"}])
     client.get_query_definition = AsyncMock(return_value={"slug": "q1"})
@@ -76,20 +76,28 @@ class TestCausetClientSync:
         assert sync.get_state("s", "e") == {"x": 1}
 
     @patch("causet_sdk._sync.CausetClient")
-    def test_emit_runs_async(self, mock_cls, mock_async_client):
+    def test_intent_runs_async(self, mock_cls, mock_async_client):
         mock_cls.return_value = mock_async_client
         sync = CausetClientSync(api_url="https://api.test", platform_slug="o", app_slug="a")
-        result = sync.emit("s", "e", "T", {"k": "v"}, intent_id="id-1")
-        mock_async_client.emit.assert_awaited_once_with("s", "e", "T", {"k": "v"}, "id-1")
+        result = sync.submit_intent("s", "e", "T", {"k": "v"}, intent_id="id-1")
+        mock_async_client.submit_intent.assert_awaited_once_with("s", "e", "T", {"k": "v"}, "id-1")
         assert result["accepted"] is True
 
     @patch("causet_sdk._sync.CausetClient")
-    def test_emit_stream_runs_async(self, mock_cls, mock_async_client):
+    def test_deprecated_intent_alias_warns(self, mock_cls, mock_async_client):
+        mock_cls.return_value = mock_async_client
+        sync = CausetClientSync(api_url="https://api.test", platform_slug="o", app_slug="a")
+        with pytest.warns(DeprecationWarning, match="submit_intent"):
+            sync.intent("s", "e", "T", {"k": "v"})
+        mock_async_client.submit_intent.assert_awaited_once_with("s", "e", "T", {"k": "v"}, None)
+
+    @patch("causet_sdk._sync.CausetClient")
+    def test_intent_stream_runs_async(self, mock_cls, mock_async_client):
         mock_cls.return_value = mock_async_client
         sync = CausetClientSync(api_url="https://api.test", platform_slug="o", app_slug="a")
         on_event = lambda ev: None
-        sync.emit_stream("s", "e", "T", {}, on_event, intent_id="id-1")
-        mock_async_client.emit_stream.assert_awaited_once_with(
+        sync.intent_stream("s", "e", "T", {}, on_event, intent_id="id-1")
+        mock_async_client.intent_stream.assert_awaited_once_with(
             "s", "e", "T", {}, on_event, "id-1"
         )
 

@@ -93,7 +93,7 @@ func TestSelectFiresOnChange(t *testing.T) {
 	}
 }
 
-func TestEmitRefreshesSubscriptionViaStatePatch(t *testing.T) {
+func TestIntentRefreshesSubscriptionViaStatePatch(t *testing.T) {
 	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case strings.Contains(r.URL.Path, "/state"):
@@ -119,9 +119,9 @@ func TestEmitRefreshesSubscriptionViaStatePatch(t *testing.T) {
 	var patchEvents int
 	c.On("patch_op", func(any) { patchEvents++ })
 
-	result, err := c.Emit("sku_stream", "sku-1", "adjust_stock", map[string]any{"qty": -5})
+	result, err := c.Intent("sku_stream", "sku-1", "adjust_stock", map[string]any{"qty": -5})
 	if err != nil {
-		t.Fatalf("Emit: %v", err)
+		t.Fatalf("Intent: %v", err)
 	}
 	if result["executionId"] != "exec-1" {
 		t.Fatalf("result = %#v", result)
@@ -131,7 +131,7 @@ func TestEmitRefreshesSubscriptionViaStatePatch(t *testing.T) {
 	}
 	state, _ := c.GetState("sku_stream", "sku-1")
 	if state["quantity"] != float64(5) {
-		t.Fatalf("state after emit = %#v", state)
+		t.Fatalf("state after intent = %#v", state)
 	}
 }
 

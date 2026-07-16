@@ -112,7 +112,7 @@ export async function fetchState(
   return parseSnapshot(data);
 }
 
-export async function emitIntent(
+export async function submitIntent(
   cfg: CausetHttpConfig,
   streamId: string,
   entityId: string,

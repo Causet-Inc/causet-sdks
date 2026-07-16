@@ -4,8 +4,9 @@ import React from 'react';
 import { CausetProvider, useCausetClient, useCausetQuery, useCausetIntent, useCausetEntity } from '../hooks.js';
 
 const mockRunQuery = vi.fn();
-const mockEmit = vi.fn();
-const mockEmitStream = vi.fn();
+const mockSubmitIntent = vi.fn();
+const mockIntent = vi.fn();
+const mockIntentStream = vi.fn();
 const mockSubscribe = vi.fn();
 const mockGetState = vi.fn();
 const mockUnsubscribe = vi.fn();
@@ -20,8 +21,9 @@ vi.mock('@causet/sdk-core', () => ({
     init: mockInit,
     destroy: mockDestroy,
     runQuery: mockRunQuery,
-    emit: mockEmit,
-    emitStream: mockEmitStream,
+    submitIntent: mockSubmitIntent,
+    intent: mockIntent,
+    intentStream: mockIntentStream,
     subscribe: mockSubscribe,
     getState: mockGetState,
     unsubscribe: mockUnsubscribe,
@@ -44,7 +46,7 @@ describe('CausetProvider', () => {
     mockGetState.mockReturnValue({ count: 1 });
     mockOn.mockReturnValue(() => undefined);
     mockRunQuery.mockResolvedValue({ items: [{ id: 1 }] });
-    mockEmit.mockResolvedValue({ accepted: true });
+    mockSubmitIntent.mockResolvedValue({ accepted: true });
   });
 
   it('provides client to children and calls init/destroy', () => {
@@ -135,21 +137,21 @@ describe('useCausetIntent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockInit.mockResolvedValue(undefined);
-    mockEmit.mockResolvedValue({ accepted: true });
-    mockEmitStream.mockResolvedValue(undefined);
+    mockSubmitIntent.mockResolvedValue({ accepted: true });
+    mockIntentStream.mockResolvedValue(undefined);
   });
 
   function IntentConsumer() {
-    const { emit, emitStream, pending } = useCausetIntent();
+    const { intent, intentStream, pending } = useCausetIntent();
     return (
       <div>
         <span data-testid="pending">{String(pending)}</span>
-        <button type="button" onClick={() => void emit('s', 'e', 'T', { x: 1 })}>
-          emit
+        <button type="button" onClick={() => void intent('s', 'e', 'T', { x: 1 })}>
+          intent
         </button>
         <button
           type="button"
-          onClick={() => void emitStream('s', 'e', 'T', { x: 1 }, () => undefined)}
+          onClick={() => void intentStream('s', 'e', 'T', { x: 1 }, () => undefined)}
         >
           stream
         </button>
@@ -157,20 +159,20 @@ describe('useCausetIntent', () => {
     );
   }
 
-  it('emit sets pending and calls client.emit', async () => {
+  it('intent sets pending and calls client.submitIntent', async () => {
     render(
       <CausetProvider options={{ apiUrl: 'https://api', platformSlug: 'p', appSlug: 'a', bearerToken: 't' }}>
         <IntentConsumer />
       </CausetProvider>,
     );
     await act(async () => {
-      screen.getByRole('button', { name: 'emit' }).click();
+      screen.getByRole('button', { name: 'intent' }).click();
     });
-    expect(mockEmit).toHaveBeenCalledWith('s', 'e', 'T', { x: 1 });
+    expect(mockSubmitIntent).toHaveBeenCalledWith('s', 'e', 'T', { x: 1 });
     expect(screen.getByTestId('pending').textContent).toBe('false');
   });
 
-  it('emitStream delegates to client', async () => {
+  it('intentStream delegates to client', async () => {
     render(
       <CausetProvider options={{ apiUrl: 'https://api', platformSlug: 'p', appSlug: 'a', bearerToken: 't' }}>
         <IntentConsumer />
@@ -179,7 +181,7 @@ describe('useCausetIntent', () => {
     await act(async () => {
       screen.getByRole('button', { name: 'stream' }).click();
     });
-    expect(mockEmitStream).toHaveBeenCalled();
+    expect(mockIntentStream).toHaveBeenCalled();
   });
 });
 

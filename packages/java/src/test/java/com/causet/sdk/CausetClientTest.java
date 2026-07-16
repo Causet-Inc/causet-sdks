@@ -87,7 +87,7 @@ class CausetClientTest {
         AtomicInteger patchEvents = new AtomicInteger();
         client.on("patch_op", d -> patchEvents.incrementAndGet());
 
-        JsonNode result = client.emit("sku_stream", "sku-1", "adjust_stock", Map.of("qty", -5));
+        JsonNode result = client.intent("sku_stream", "sku-1", "adjust_stock", Map.of("qty", -5));
 
         assertEquals("exec-1", result.get("executionId").asText());
         assertEquals(1, patchEvents.get());
@@ -108,7 +108,7 @@ class CausetClientTest {
         List<Integer> values = new CopyOnWriteArrayList<>();
         client.select("sku_stream", "sku-1", state -> state.get("quantity").asInt(), v -> values.add((Integer) v));
 
-        client.emit("sku_stream", "sku-1", "adjust_stock", Map.of());
+        client.intent("sku_stream", "sku-1", "adjust_stock", Map.of());
 
         assertEquals(List.of(10, 95), values);
     }
@@ -177,7 +177,7 @@ class CausetClientTest {
     }
 
     @Test
-    void emitStreamDeliversEvents() throws Exception {
+    void intentStreamDeliversEvents() throws Exception {
         server = new MockWebServer();
         server.start();
         server.enqueue(new MockResponse()
@@ -186,7 +186,7 @@ class CausetClientTest {
 
         CausetClient client = new CausetClient(configFor(server));
         List<CausetClient.SseEvent> events = new CopyOnWriteArrayList<>();
-        client.emitStream("sku_stream", "sku-1", "adjust_stock", Map.of("qty", 5), events::add);
+        client.intentStream("sku_stream", "sku-1", "adjust_stock", Map.of("qty", 5), events::add);
 
         assertEquals(2, events.size());
         assertEquals("START", events.get(0).event);

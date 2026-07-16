@@ -183,8 +183,8 @@ class TestGetStateReturnsDeepClone:
             assert client.get_state("s", "e") == {"items": [1]}
 
 
-class TestEmitIntent:
-    async def test_emit_accepted_applies_patch(self):
+class TestSubmitIntent:
+    async def test_intent_accepted_applies_patch(self):
         with respx.mock:
             respx.get(f"{PREFIX}/entities/s/e/state").return_value = httpx.Response(
                 200, json={"snapshotJson": {"x": 1}, "snapshotVersion": 1}
@@ -199,11 +199,21 @@ class TestEmitIntent:
             )
             client = _make_client()
             await client.subscribe("s", "e")
-            result = await client.emit("s", "e", "UPDATE", {"x": 2})
+            result = await client.submit_intent("s", "e", "UPDATE", {"x": 2})
             assert result["accepted"] is True
             assert client.get_state("s", "e") == {"x": 2}
 
-    async def test_emit_without_patch_refetches(self):
+    async def test_deprecated_intent_alias_warns_and_delegates(self):
+        with respx.mock:
+            respx.post(f"{RUNTIME_PREFIX}/intents/submit").return_value = httpx.Response(
+                200, json={"accepted": True}
+            )
+            client = _make_client()
+            with pytest.warns(DeprecationWarning, match="submit_intent"):
+                result = await client.intent("s", "e", "T", {})
+            assert result["accepted"] is True
+
+    async def test_intent_without_patch_refetches(self):
         with respx.mock:
             state_route = respx.get(f"{PREFIX}/entities/s/e/state")
             state_route.side_effect = [
@@ -215,11 +225,11 @@ class TestEmitIntent:
             )
             client = _make_client()
             await client.subscribe("s", "e")
-            await client.emit("s", "e", "UPDATE", {})
+            await client.submit_intent("s", "e", "UPDATE", {})
             assert client.get_state("s", "e") == {"x": 99}
             assert state_route.call_count == 2
 
-    async def test_emit_applies_string_state_patch(self):
+    async def test_intent_applies_string_state_patch(self):
         with respx.mock:
             respx.get(f"{PREFIX}/entities/s/e/state").return_value = httpx.Response(
                 200, json={"snapshotJson": {"x": 1}, "snapshotVersion": 1}
@@ -230,27 +240,27 @@ class TestEmitIntent:
             )
             client = _make_client()
             await client.subscribe("s", "e")
-            await client.emit("s", "e", "T", {})
+            await client.submit_intent("s", "e", "T", {})
             assert client.get_state("s", "e") == {"x": 5}
 
 
-class TestEmitStream:
-    async def test_emit_stream_invokes_sse_callback(self):
+class TestIntentStream:
+    async def test_intent_stream_invokes_sse_callback(self):
         sse = 'event: progress\ndata: {"step":1}\n\n'
         received: list[dict] = []
         with respx.mock:
             respx.post(STREAM_SSE_URL).return_value = httpx.Response(200, text=sse)
             client = _make_client()
-            await client.emit_stream("s", "e", "T", {"k": "v"}, lambda ev: received.append(ev))
+            await client.intent_stream("s", "e", "T", {"k": "v"}, lambda ev: received.append(ev))
         assert len(received) == 1
         assert received[0]["data"] == {"step": 1}
 
-    async def test_emit_stream_with_intent_id(self):
+    async def test_intent_stream_with_intent_id(self):
         with respx.mock:
             route = respx.post(STREAM_SSE_URL)
             route.return_value = httpx.Response(200, text="")
             client = _make_client()
-            await client.emit_stream("s", "e", "T", {}, lambda _ev: None, intent_id="id-1")
+            await client.intent_stream("s", "e", "T", {}, lambda _ev: None, intent_id="id-1")
             body = json.loads(route.calls[0].request.content.decode())
             assert body["intentId"] == "id-1"
 
@@ -374,7 +384,7 @@ class TestSelect:
             await client.subscribe("s", "e")
             unsub = client.select("s", "e", lambda s: s["x"], lambda v: values.append(v))
             assert values == [1]
-            await client.emit("s", "e", "INC", {})
+            await client.submit_intent("s", "e", "INC", {})
             assert values == [1, 2]
             unsub()
 
@@ -403,7 +413,7 @@ class TestSelect:
 
             client.select("s", "e", flaky_selector, lambda _v: None)
             with caplog.at_level("ERROR"):
-                await client.emit("s", "e", "T", {})
+                await client.submit_intent("s", "e", "T", {})
             assert "Error in state selector" in caplog.text
 
     async def test_selector_skips_other_entities(self):
@@ -422,7 +432,7 @@ class TestSelect:
             await client.subscribe("s", "e")
             other_values: list = []
             client.select("other", "entity", lambda s: s["x"], lambda v: other_values.append(v))
-            await client.emit("s", "e", "T", {})
+            await client.submit_intent("s", "e", "T", {})
             assert other_values == []
 
     async def test_notify_selectors_noop_when_unsubscribed(self):

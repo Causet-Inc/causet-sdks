@@ -50,19 +50,26 @@ Uses OIDC — no long-lived PyPI password required.
 
 ## Go (tag-based)
 
-No publish step. Tag the repo and consumers run:
+Tag the repo and consumers install from the monorepo path until a dedicated module repository is published:
 
 ```bash
-go get github.com/causet-inc/causet-sdk-go@v0.1.0
+git clone https://github.com/Causet-Inc/causet-sdks.git
+cd causet-sdks/packages/go
+go test ./...
 ```
 
-See `packages/go/README.md` for monorepo vs dedicated-repo module path options.
+Or use a `replace` directive in your `go.mod` (see `packages/go/README.md`).
 
 ---
 
-## Java / Maven Central (manual setup)
+## Java / Maven Central (coming soon)
 
-Register `com.causet` on [central.sonatype.com](https://central.sonatype.com), configure GPG signing and `distributionManagement` in `pom.xml`, then add a `publish-maven.yml` workflow when credentials are ready.
+Maven Central publishing is in progress. Until `com.causet:causet-sdk` is available:
+
+1. Install from source: `cd packages/java && mvn install`
+2. Depend on the local artifact in your project
+
+When ready, register `com.causet` on [central.sonatype.com](https://central.sonatype.com), configure GPG signing and `distributionManagement` in `pom.xml`, and add a `publish-maven.yml` workflow.
 
 ---
 

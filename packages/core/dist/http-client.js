@@ -87,7 +87,7 @@ export async function fetchState(cfg, streamId, entityId, fetchImpl = boundFetch
         return { state: null, cursor: 0 };
     return parseSnapshot(data);
 }
-export async function emitIntent(cfg, streamId, entityId, intentType, payload, intentId, fetchImpl = boundFetch) {
+export async function submitIntent(cfg, streamId, entityId, intentType, payload, intentId, fetchImpl = boundFetch) {
     const url = `${runtimeBase(cfg)}/intents/submit`;
     const body = {
         intentId: intentId?.trim() || generateIntentId(),

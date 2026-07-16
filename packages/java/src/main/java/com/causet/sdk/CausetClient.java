@@ -32,9 +32,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * Java SDK client for the Causet SaaS API. Method names mirror the other
+ * Java SDK client for the Causet runtime API. Method names mirror the other
  * Causet SDKs (TypeScript, Python, Go, Laravel) using Java's camelCase
- * convention: {@code emit}, {@code emitStream}, {@code subscribe}/
+ * convention: {@code intent}, {@code intentStream}, {@code subscribe}/
  * {@code unsubscribe}/{@code getState}, {@code on}, {@code select},
  * {@code runQuery}, {@code connectStream}/{@code disconnectStream}, etc.
  */
@@ -246,17 +246,20 @@ public class CausetClient implements AutoCloseable {
     // Intents
     // ------------------------------------------------------------------
 
-    public JsonNode emit(String streamId, String entityId, String intentType, Map<String, Object> payload) throws IOException {
-        return emit(streamId, entityId, intentType, payload, null);
-    }
-
     /**
-     * Submits an intent (sync) and returns the raw response
+     * Submit an intent to the Causet runtime (sync) and return the raw response
      * (accepted/executionId/error/statePatch). If entityId is subscribed
      * (see {@link #subscribe}), the cached state is refreshed via statePatch
      * or a refetch, and "state"/"patch_op" events are emitted.
+     *
+     * <p>This submits an intent for processing; it does not directly append a
+     * committed business event.
      */
-    public JsonNode emit(String streamId, String entityId, String intentType, Map<String, Object> payload, String intentId) throws IOException {
+    public JsonNode submitIntent(String streamId, String entityId, String intentType, Map<String, Object> payload) throws IOException {
+        return submitIntent(streamId, entityId, intentType, payload, null);
+    }
+
+    public JsonNode submitIntent(String streamId, String entityId, String intentType, Map<String, Object> payload, String intentId) throws IOException {
         ObjectNode body = MAPPER.createObjectNode();
         body.put("intentId", (intentId == null || intentId.isBlank()) ? UUID.randomUUID().toString() : intentId);
         body.put("forkId", config.forkId);
@@ -267,12 +270,30 @@ public class CausetClient implements AutoCloseable {
 
         JsonNode result = postJson(runtimeBase() + "/intents/submit", body);
         if (result.path("accepted").asBoolean(false)) {
-            refreshSubscriptionAfterEmit(streamId, entityId, result);
+            refreshSubscriptionAfterIntent(streamId, entityId, result);
         }
         return result;
     }
 
-    private void refreshSubscriptionAfterEmit(String streamId, String entityId, JsonNode result) {
+    /**
+     * @deprecated Use {@link #submitIntent}. Submits an intent to the runtime; does not
+     * directly append a committed business event.
+     */
+    @Deprecated
+    public JsonNode intent(String streamId, String entityId, String intentType, Map<String, Object> payload) throws IOException {
+        return submitIntent(streamId, entityId, intentType, payload, null);
+    }
+
+    /**
+     * @deprecated Use {@link #submitIntent}. Submits an intent to the runtime; does not
+     * directly append a committed business event.
+     */
+    @Deprecated
+    public JsonNode intent(String streamId, String entityId, String intentType, Map<String, Object> payload, String intentId) throws IOException {
+        return submitIntent(streamId, entityId, intentType, payload, intentId);
+    }
+
+    private void refreshSubscriptionAfterIntent(String streamId, String entityId, JsonNode result) {
         Subscription sub = subscriptions.get(subKey(streamId, entityId));
         if (sub == null) return;
 
@@ -300,7 +321,7 @@ public class CausetClient implements AutoCloseable {
                     sub.cursor = fresh.getCursor();
                 }
             } catch (IOException ignored) {
-                // keep the stale cache rather than throwing from a post-emit refresh path
+                // keep the stale cache rather than throwing from a post-intent refresh path
             }
         }
 
@@ -321,16 +342,16 @@ public class CausetClient implements AutoCloseable {
      * ERROR, …) via SSE. Blocks the calling thread until the stream closes;
      * run on its own thread/executor for non-blocking use.
      */
-    public void emitStream(String streamId, String entityId, String intentType, Map<String, Object> payload, Consumer<SseEvent> onEvent) throws IOException {
-        emitStream(streamId, entityId, intentType, payload, onEvent, null);
+    public void intentStream(String streamId, String entityId, String intentType, Map<String, Object> payload, Consumer<SseEvent> onEvent) throws IOException {
+        intentStream(streamId, entityId, intentType, payload, onEvent, null);
     }
 
     /**
-     * Overload of {@link #emitStream} that accepts an explicit idempotency
+     * Overload of {@link #intentStream} that accepts an explicit idempotency
      * key. Parameter order mirrors the other Causet SDKs: (..., payload,
      * onEvent, intentId).
      */
-    public void emitStream(String streamId, String entityId, String intentType, Map<String, Object> payload, Consumer<SseEvent> onEvent, String intentId) throws IOException {
+    public void intentStream(String streamId, String entityId, String intentType, Map<String, Object> payload, Consumer<SseEvent> onEvent, String intentId) throws IOException {
         String token = getToken();
         ObjectNode body = MAPPER.createObjectNode();
         body.put("intentId", (intentId == null || intentId.isBlank()) ? UUID.randomUUID().toString() : intentId);
@@ -355,19 +376,19 @@ public class CausetClient implements AutoCloseable {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.isEmpty()) {
-                    emitIntentSseBlock(block.toString(), onEvent);
+                    dispatchIntentSseBlock(block.toString(), onEvent);
                     block.setLength(0);
                     continue;
                 }
                 block.append(line).append('\n');
             }
             if (block.length() > 0) {
-                emitIntentSseBlock(block.toString(), onEvent);
+                dispatchIntentSseBlock(block.toString(), onEvent);
             }
         }
     }
 
-    private void emitIntentSseBlock(String block, Consumer<SseEvent> onEvent) {
+    private void dispatchIntentSseBlock(String block, Consumer<SseEvent> onEvent) {
         if (block.isBlank()) return;
         String id = null;
         String eventType = null;

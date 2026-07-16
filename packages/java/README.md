@@ -1,21 +1,37 @@
 # Causet Java SDK
 
-Java 17+ client for the Causet SaaS API — entity state caching, intents (sync and SSE progress), named queries, projections, entity listing, and live stream events via **WebSocket** or **SSE**. Method names mirror the other Causet SDKs (TypeScript, Python, Go, Laravel) using Java's `camelCase` convention: `emit`, `emitStream`, `subscribe`/`unsubscribe`/`getState`, `on`, `select`, `runQuery`, `connectStream`/`disconnectStream`, etc.
+Java 17+ client for the Causet runtime API — entity state caching, submit-intent (sync and SSE progress), named queries, projections, entity listing, and live stream events via **WebSocket** or **SSE**.
 
-## Maven
+## Status
+
+| | |
+| --- | --- |
+| **Source** | Available ([`packages/java`](.)) |
+| **Package distribution** | Source installation only — **Maven Central coming soon** |
+| **Maturity** | Preview |
+| **Support** | Community or best effort — [GitHub Issues](https://github.com/Causet-Inc/causet-sdks/issues) |
+| **Runtime compatibility** | Java 17+ |
+
+Primary API: `client.submitIntent()`. Deprecated alias: `intent()`.
+
+## Installation
+
+Package distribution is currently **source installation only**. **Maven Central publishing is coming soon.**
+
+```bash
+git clone https://github.com/Causet-Inc/causet-sdks.git
+cd causet-sdks/packages/java
+mvn install
+```
+
+After Maven Central is available:
 
 ```xml
 <dependency>
     <groupId>com.causet</groupId>
     <artifactId>causet-sdk</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
-```
-
-Build locally:
-
-```bash
-cd causet-sdks/packages/java && mvn test
 ```
 
 ## Configuration
@@ -84,12 +100,12 @@ Event types: `state`, `patch_op`, `stream_event`, `stream_connected`, `stream_di
 ```java
 // Synchronous — returns once accepted/rejected. Refreshes any subscribe()d
 // cache for the entity via statePatch (or a refetch) and emits "state".
-JsonNode result = client.emit("sku_stream", "sku-1", "adjust_stock", Map.of("qty", -5));
+JsonNode result = client.submitIntent("sku_stream", "sku-1", "adjust_stock", Map.of("qty", -5));
 
 // Streamed — SSE progress events (START, COMPLETE, ERROR, …). Blocks the
 // calling thread until the stream closes; run on its own thread/executor
 // for non-blocking use.
-client.emitStream("sku_stream", "sku-1", "adjust_stock", Map.of("qty", -5), ev -> {
+client.intentStream("sku_stream", "sku-1", "adjust_stock", Map.of("qty", -5), ev -> {
     System.out.println(ev.event + " " + ev.data);
 });
 ```
@@ -113,7 +129,7 @@ JsonNode entities = client.listEntities(listOpts);
 
 ## WebSocket & SSE (live streams)
 
-Live events come from **causet-realtime** (`*.realtime.causet.cloud`), not the SaaS API host.
+Live events come from the **realtime service** (`*.realtime.causet.cloud`), not the Causet Cloud gateway host.
 
 | Environment | Realtime HTTP | WebSocket |
 |-------------|---------------|-----------|
@@ -224,8 +240,9 @@ The SDK parses each `data:` line into a `Map<String, Object>` — same JSON shap
 | `subscribe`/`unsubscribe`/`getState` | Cached entity state |
 | `fetchState` | One-shot, uncached entity state + cursor (`EntityState`) |
 | `select(streamId, entityId, selector, handler)` | Derived-state watcher over cached state |
-| `emit` | Submit an intent (sync) |
-| `emitStream` | Submit an intent and stream SSE progress |
+| `submitIntent` | Submit an intent (sync) |
+| `intent` | Deprecated — use `submitIntent` |
+| `intentStream` | Submit an intent and stream SSE progress |
 | `runQuery`/`listQueries`/`getQueryDefinition` | Named queries |
 | `listProjections` | Projection table definitions |
 | `listEntities` | Paginated entity ids |

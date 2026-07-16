@@ -16,9 +16,16 @@ export declare function useCausetQuery(querySlug: string, input?: Record<string,
     loading: boolean;
     refresh: () => Promise<void>;
 };
+export declare function useCausetSubmitIntent(): {
+    submitIntent: (streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>) => Promise<import("@causet/sdk-core").IntentResult>;
+    intentStream: (streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, onEvent: Parameters<CausetClient["intentStream"]>[4]) => Promise<void>;
+    pending: boolean;
+};
+/** @deprecated Use useCausetSubmitIntent(). */
 export declare function useCausetIntent(): {
-    emit: (streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>) => Promise<import("@causet/sdk-core").IntentResult>;
-    emitStream: (streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, onEvent: Parameters<CausetClient["emitStream"]>[4]) => Promise<void>;
+    intent: (streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>) => Promise<import("@causet/sdk-core").IntentResult>;
+    submitIntent: (streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>) => Promise<import("@causet/sdk-core").IntentResult>;
+    intentStream: (streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, onEvent: Parameters<CausetClient["intentStream"]>[4]) => Promise<void>;
     pending: boolean;
 };
 /** Subscribe to entity state + optional WebSocket stream. */

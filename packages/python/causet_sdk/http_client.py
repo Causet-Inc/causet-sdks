@@ -213,7 +213,7 @@ async def diff_state(
     )
 
 
-async def emit_intent(
+async def submit_intent(
     cfg: CausetHttpConfig,
     stream_id: str,
     entity_id: str,

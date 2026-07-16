@@ -33,7 +33,7 @@ class CausetClientExtendedTest extends TestCase
         );
     }
 
-    public function test_emit_stream(): void
+    public function test_intent_stream(): void
     {
         $sse = "event: START\ndata: {\"ok\":true}\n\n";
         $client = $this->makeClient([
@@ -43,7 +43,7 @@ class CausetClientExtendedTest extends TestCase
 
         $events = [];
         $client->init();
-        $client->emitStream('s', 'e', 'UPDATE', [], function (array $ev) use (&$events): void {
+        $client->intentStream('s', 'e', 'UPDATE', [], function (array $ev) use (&$events): void {
             $events[] = $ev;
         });
         $this->assertSame('START', $events[0]['event']);
@@ -94,7 +94,7 @@ class CausetClientExtendedTest extends TestCase
             new Response(200, [], json_encode(['accepted' => true, 'statePatch' => $patch])),
         ]);
         $client->subscribe('s', 'e');
-        $client->emit('s', 'e', 'UPDATE', []);
+        $client->intent('s', 'e', 'UPDATE', []);
         $this->assertSame(['x' => 3], $client->getState('s', 'e'));
     }
 
