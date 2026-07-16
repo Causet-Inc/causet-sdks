@@ -88,8 +88,12 @@ jobs:
 
           unpublish_pkg() {
             local pkg="$1"
-            echo "Unpublishing ${pkg}@${VERSION}..."
-            npm unpublish "${pkg}@${VERSION}" --force 2>/dev/null || npm unpublish "${pkg}@${VERSION}" || true
+            echo "Unpublishing ${pkg}@${VERSION} (requires --force for sole published version)..."
+            if ! npm unpublish "${pkg}@${VERSION}" --force; then
+              echo "::error::Failed to unpublish ${pkg}@${VERSION}. npm blocks replacing an existing version without a successful unpublish."
+              exit 1
+            fi
+            echo "Unpublished ${pkg}@${VERSION}. Note: npm enforces a 24-hour cooldown before the package name can be published again."
           }
 
           publish_pkg() {
@@ -109,7 +113,7 @@ jobs:
               unpublish_pkg @causet/sdk
               unpublish_pkg @causet/sdk-core
             fi
-            sleep 5
+            sleep 30
           fi
 
           # Dependency order: core must publish before dependents.
