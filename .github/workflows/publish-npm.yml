@@ -23,6 +23,10 @@ on:
           - all
           - js-and-next
         default: js-and-next
+      otp:
+        description: npm 2FA one-time password (required for republish when @causet org enforces TFA)
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -74,6 +78,7 @@ jobs:
       - name: Publish packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_OTP: ${{ github.event.inputs.otp }}
         run: |
           ARGS="--access public --provenance"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
