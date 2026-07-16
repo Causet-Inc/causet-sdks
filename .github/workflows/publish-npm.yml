@@ -10,6 +10,19 @@ on:
         required: false
         type: boolean
         default: true
+      republish:
+        description: Unpublish existing versions before publishing (required to replace 0.1.0 on npm)
+        required: false
+        type: boolean
+        default: false
+      scope:
+        description: Which packages to publish
+        required: false
+        type: choice
+        options:
+          - all
+          - js-and-next
+        default: js-and-next
 
 permissions:
   contents: read
@@ -67,8 +80,46 @@ jobs:
             ARGS="$ARGS --dry-run"
           fi
 
+          VERSION=$(node -p "require('./packages/core/package.json').version")
+          SCOPE="${{ github.event.inputs.scope }}"
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            SCOPE="all"
+          fi
+
+          unpublish_pkg() {
+            local pkg="$1"
+            echo "Unpublishing ${pkg}@${VERSION}..."
+            npm unpublish "${pkg}@${VERSION}" --force 2>/dev/null || npm unpublish "${pkg}@${VERSION}" || true
+          }
+
+          publish_pkg() {
+            local pkg="$1"
+            echo "Publishing ${pkg}@${VERSION}..."
+            npm publish -w "${pkg}" $ARGS
+          }
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.republish }}" = "true" ] && [ "${{ github.event.inputs.dry_run }}" != "true" ]; then
+            if [ "$SCOPE" = "js-and-next" ]; then
+              unpublish_pkg @causet/sdk-next
+              unpublish_pkg @causet/sdk
+              unpublish_pkg @causet/sdk-core
+            else
+              unpublish_pkg @causet/sdk-next
+              unpublish_pkg @causet/sdk-node
+              unpublish_pkg @causet/sdk
+              unpublish_pkg @causet/sdk-core
+            fi
+            sleep 5
+          fi
+
           # Dependency order: core must publish before dependents.
-          npm publish -w @causet/sdk-core $ARGS
-          npm publish -w @causet/sdk $ARGS
-          npm publish -w @causet/sdk-node $ARGS
-          npm publish -w @causet/sdk-next $ARGS
+          if [ "$SCOPE" = "js-and-next" ]; then
+            publish_pkg @causet/sdk-core
+            publish_pkg @causet/sdk
+            publish_pkg @causet/sdk-next
+          else
+            publish_pkg @causet/sdk-core
+            publish_pkg @causet/sdk
+            publish_pkg @causet/sdk-node
+            publish_pkg @causet/sdk-next
+          fi
