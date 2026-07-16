@@ -34,6 +34,19 @@ Use **GitHub Releases** with semver tags (`v0.1.0`):
 
 **Dry-run:** Actions → Publish npm → Run workflow (dry_run defaults to true).
 
+### Republish the same version (e.g. replace `0.1.0`)
+
+npm versions are **immutable**. To replace an existing `0.1.0` tarball:
+
+1. Actions → **Publish npm** → Run workflow
+2. Set `dry_run` = false, `republish` = true, `scope` = `js-and-next`
+3. Enter your **npm 2FA OTP** in the `otp` field (required for unpublish on the `@causet` org)
+4. Run the workflow
+
+The workflow unpublishes `@causet/sdk-core`, `@causet/sdk`, and `@causet/sdk-next` at the current version, then republishes in dependency order.
+
+**Note:** If `0.1.0` is the only published version of a package, npm may enforce a **24-hour cooldown** after unpublish before the name can be published again. If publish fails after a successful unpublish, retry the workflow the next day (without `republish`).
+
 ---
 
 ## Python / PyPI (automated)

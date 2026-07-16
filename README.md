@@ -12,7 +12,7 @@ Authoritative machine-readable status: [`docs/sdk-status.json`](docs/sdk-status.
 
 | SDK | Source | Package distribution | Maturity | Support | Runtime compatibility |
 | --- | ------ | -------------------- | -------- | ------- | --------------------- |
-| [JavaScript / TypeScript](packages/js/README.md) | Available | Published to npm (`@causet/sdk` **0.1.0**, `@causet/sdk-core`, `@causet/sdk-node`, `@causet/sdk-next`) | Supported preview | Supported for pilots | Node.js 18+ (ESM); browsers with `fetch`; TypeScript 5+ |
+| [JavaScript / TypeScript](packages/js/README.md) | Available | Published to npm (`@causet/sdk` **0.2.0**, `@causet/sdk-core`, `@causet/sdk-node`, `@causet/sdk-next`) | Supported preview | Supported for pilots | Node.js 18+ (ESM); browsers with `fetch`; TypeScript 5+ |
 | [Python](packages/python/README.md) | Available | Source installation only | Preview | Community or best effort | Python 3.10+ |
 | [Java](packages/java/README.md) | Available | Source installation only — **Maven Central coming soon** | Preview | Community or best effort | Java 17+ |
 | [PHP (Laravel)](packages/laravel/README.md) | Available | Source installation only | Experimental | Not supported | PHP 8.2+; Laravel 11+ or 12+ |
@@ -28,7 +28,7 @@ npm install @causet/sdk-next     # Next.js + React
 npm install @causet/sdk-core     # low-level TypeScript client
 ```
 
-Latest published version: **0.1.0** on [npm](https://www.npmjs.com/org/causet).
+Latest on npm today: **0.1.0**. This branch releases **0.2.0** — publish after merge via GitHub Release `v0.2.0`.
 
 Packages **not** on public registries yet: `causet-sdk` (PyPI — not published yet), `com.causet:causet-sdk` (Maven Central — coming soon), `causet/laravel-sdk` (Packagist), `github.com/causet-inc/causet-sdk-go` (Go module). Use source installation from this repository until a release is announced.
 
@@ -36,10 +36,10 @@ Packages **not** on public registries yet: `causet-sdk` (PyPI — not published 
 
 | Your stack | Package | Status |
 |------------|---------|--------|
-| Browser / Vite / React (non-Next) | `@causet/sdk` | npm 0.1.0 |
-| Node.js script, Express, Fastify | `@causet/sdk-node` | npm 0.1.0 |
-| Next.js App Router | `@causet/sdk-next` | npm 0.1.0 |
-| Custom TS framework / library author | `@causet/sdk-core` | npm 0.1.0 |
+| Browser / Vite / React (non-Next) | `@causet/sdk` | npm 0.2.0 |
+| Node.js script, Express, Fastify | `@causet/sdk-node` | npm 0.2.0 |
+| Next.js App Router | `@causet/sdk-next` | npm 0.2.0 |
+| Custom TS framework / library author | `@causet/sdk-core` | npm 0.2.0 |
 | Python asyncio, FastAPI, Django async | `causet-sdk` | source only |
 | Python scripts / sync code | `causet-sdk` (`CausetClientSync`) | source only |
 | Go services, CLIs, workers | `causet-sdk-go` | source only |
@@ -151,7 +151,7 @@ Maintained in this repository with documented compatibility. Support is provided
 
 ### Supported for pilots
 
-The JavaScript / TypeScript npm packages at **0.1.0** are available for pilot integrations. Report issues on GitHub; APIs may still change between minor releases while in preview.
+The JavaScript / TypeScript npm packages at **0.2.0** are available for pilot integrations. Report issues on GitHub; APIs may still change between minor releases while in preview.
 
 ### Community or best effort
 
@@ -167,7 +167,7 @@ No maintenance or compatibility commitments. May be removed or rewritten without
 
 ## Compatibility policy
 
-- **Versioning:** Packages use [semantic versioning](https://semver.org/) in manifests (`0.1.0` today). While major version is `0`, minor releases may include breaking API changes; treat `0.x` as preview.
+- **Versioning:** Packages use [semantic versioning](https://semver.org/) in manifests (`0.2.0` today). While major version is `0`, minor releases may include breaking API changes; treat `0.x` as preview.
 - **Runtime compatibility:** Each SDK README documents supported language and framework versions. The status matrix above is the source of truth for which SDK works with which runtime.
 - **Breaking changes:** Announced in GitHub Release notes. Deprecated methods (for example `intent()`, `emit()`) remain for at least one minor release where feasible.
 - **Support window:** Only the latest `0.x` npm release is intended for pilot use. Older SDK releases receive no compatibility guarantees.

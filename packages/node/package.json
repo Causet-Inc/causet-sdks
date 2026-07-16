@@ -1,6 +1,6 @@
 {
   "name": "@causet/sdk-node",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Node.js SDK for Causet (uses global fetch, WebSocket from ws optional)",
   "type": "module",
   "main": "./dist/index.js",
@@ -36,7 +36,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@causet/sdk-core": "0.1.0"
+    "@causet/sdk-core": "0.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
