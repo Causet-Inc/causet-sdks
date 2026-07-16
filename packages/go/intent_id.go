@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// generateIntentID creates a random v4-ish UUID string for Emit/EmitStream
+// generateIntentID creates a random v4-ish UUID string for Intent/IntentStream
 // calls that don't supply their own idempotency key (mirrors
 // generateIntentId() in the TS/Python SDKs).
 func generateIntentID() string {

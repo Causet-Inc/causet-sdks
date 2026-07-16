@@ -1,4 +1,4 @@
-"""CausetClient — main SDK class for the Causet SaaS API.
+"""CausetClient — main SDK class for the Causet runtime API.
 
 Mirrors CausetClient.js from the JavaScript SDK.  Holds state for
 subscribed entities, publishes intents, and manages WebSocket streaming.
@@ -18,7 +18,7 @@ from causet_sdk.errors import CausetApiError, CausetError
 from causet_sdk.http_client import (
     CausetHttpConfig,
     diff_state as _diff_state,
-    emit_intent as _emit_intent,
+    submit_intent as _submit_intent,
     fetch_state as _fetch_state,
     fetch_state_at_cursor as _fetch_state_at_cursor,
     get_projection_schema as _get_projection_schema,
@@ -78,7 +78,7 @@ class _ClientConfig:
 
 
 class CausetClient:
-    """SDK client for the Causet SaaS API.
+    """SDK client for the Causet runtime API.
 
     Holds state only for subscribed entities.  Publishes intents via REST
     and streams real-time events via WebSocket.
@@ -226,7 +226,7 @@ class CausetClient:
     # Intents
     # ------------------------------------------------------------------
 
-    async def emit(
+    async def submit_intent(
         self,
         stream_id: str,
         entity_id: str,
@@ -234,9 +234,14 @@ class CausetClient:
         payload: dict,
         intent_id: Optional[str] = None,
     ) -> dict:
-        """Submit intent. Returns ``{accepted, execution_id?, error?}``."""
+        """Submit an intent to the Causet runtime.
+
+        Returns ``{accepted, execution_id?, error?, state_patch?}``. This submits
+        an intent for processing; it does not directly append a committed
+        business event.
+        """
         result = await self._run_with_token_retry(
-            lambda cfg: _emit_intent(
+            lambda cfg: _submit_intent(
                 cfg, stream_id, entity_id, intent_type, payload, intent_id
             )
         )
@@ -273,7 +278,29 @@ class CausetClient:
 
         return result
 
-    async def emit_stream(
+    async def intent(
+        self,
+        stream_id: str,
+        entity_id: str,
+        intent_type: str,
+        payload: dict,
+        intent_id: Optional[str] = None,
+    ) -> dict:
+        """Deprecated alias for :meth:`submit_intent`."""
+        import warnings
+
+        warnings.warn(
+            "intent() is deprecated; use submit_intent(). "
+            "This method submits an intent to the runtime; it does not directly "
+            "append a committed business event.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return await self.submit_intent(
+            stream_id, entity_id, intent_type, payload, intent_id
+        )
+
+    async def intent_stream(
         self,
         stream_id: str,
         entity_id: str,

@@ -1,6 +1,20 @@
 # @causet/sdk
 
-Browser and native **ESM JavaScript** SDK for [Causet](https://causet.cloud). Re-exports `@causet/sdk-core` — use this package in front-end apps, Vite, Webpack, or any bundler that targets browsers or modern JS runtimes.
+Browser and native **ESM JavaScript** SDK for [Causet](https://causet.cloud). Re-exports `@causet/sdk-core`.
+
+## Status
+
+| | |
+| --- | --- |
+| **Source** | Available ([`packages/js`](.)) |
+| **Package distribution** | Published to npm — `@causet/sdk` **0.1.0** |
+| **Maturity** | Supported preview |
+| **Support** | Supported for pilots — [GitHub Issues](https://github.com/Causet-Inc/causet-sdks/issues) |
+
+Platform documentation: [docs.causet.io](https://docs.causet.io)
+| **Runtime compatibility** | ES2022+ with native `fetch`; Node.js 18+; TypeScript 5+ declarations; ESM only (no CommonJS bundle) |
+
+Primary API: `client.submitIntent()`. Deprecated aliases: `intent()`, `emit()`.
 
 ## Features
 
@@ -50,16 +64,16 @@ await client.init();
 await client.subscribe('ticket_stream', 'tkt_1');
 console.log(client.getState('ticket_stream', 'tkt_1'));
 
-// Submit intent
-await client.emit('ticket_stream', 'tkt_1', 'ADD_COMMENT', {
+// Submit intent (does not directly append a committed business event)
+await client.submitIntent('ticket_stream', 'tkt_1', 'ADD_COMMENT', {
   body: 'Customer replied',
-});
+}, 'comment-tkt_1-001');
 
 // Query projection table
 const { items } = await client.runQuery('open_tickets', {}, { limit: 25 });
 
 // Stream intent progress (SSE)
-await client.emitStream('ticket_stream', 'tkt_1', 'CLOSE_TICKET', {}, (ev) => {
+await client.intentStream('ticket_stream', 'tkt_1', 'CLOSE_TICKET', {}, (ev) => {
   if (ev.event === 'COMPLETE') console.log('Done', ev.data);
 });
 

@@ -228,10 +228,10 @@ func (c *Client) notifySelectors(streamID, entityID string) {
 	}
 }
 
-// refreshSubscriptionAfterEmit applies statePatch (if present) or refetches
-// state for a subscribed entity after a successful Emit, then notifies
+// refreshSubscriptionAfterIntent applies statePatch (if present) or refetches
+// state for a subscribed entity after a successful Intent, then notifies
 // "state"/"patch_op" listeners and selectors — mirrors the TS/Python clients.
-func (c *Client) refreshSubscriptionAfterEmit(streamID, entityID string, result map[string]any) {
+func (c *Client) refreshSubscriptionAfterIntent(streamID, entityID string, result map[string]any) {
 	c.subMu.Lock()
 	sub, ok := c.subscriptions[subKey(streamID, entityID)]
 	c.subMu.Unlock()

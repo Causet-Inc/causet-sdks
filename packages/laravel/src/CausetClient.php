@@ -172,10 +172,12 @@ class CausetClient
     }
 
     /**
+     * Submit an intent to the Causet runtime.
+     *
      * @param  array<string, mixed>  $payload
      * @return array{accepted: bool, execution_id?: string, error?: string, state_patch?: mixed}
      */
-    public function emit(
+    public function submitIntent(
         string $streamId,
         string $entityId,
         string $intentType,
@@ -183,7 +185,7 @@ class CausetClient
         ?string $intentId = null,
     ): array {
         $result = $this->runWithRetry(
-            fn (CausetHttpConfig $cfg): array => $this->httpClient->emitIntent(
+            fn (CausetHttpConfig $cfg): array => $this->httpClient->submitIntent(
                 $cfg,
                 $streamId,
                 $entityId,
@@ -201,10 +203,27 @@ class CausetClient
     }
 
     /**
+     * @deprecated Use submitIntent(). Submits an intent to the runtime; does not
+     * directly append a committed business event.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array{accepted: bool, execution_id?: string, error?: string, state_patch?: mixed}
+     */
+    public function intent(
+        string $streamId,
+        string $entityId,
+        string $intentType,
+        array $payload,
+        ?string $intentId = null,
+    ): array {
+        return $this->submitIntent($streamId, $entityId, $intentType, $payload, $intentId);
+    }
+
+    /**
      * @param  array<string, mixed>  $payload
      * @param  callable(array{id: ?string, event: ?string, data: mixed}): void  $onEvent
      */
-    public function emitStream(
+    public function intentStream(
         string $streamId,
         string $entityId,
         string $intentType,

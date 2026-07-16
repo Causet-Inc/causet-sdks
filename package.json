@@ -1,7 +1,7 @@
 {
   "name": "causet-sdks",
   "private": true,
-  "description": "Official Causet client SDKs — JavaScript, Python, Go, Java, PHP",
+  "description": "Official open-source Causet client SDKs — JavaScript, Python, Go, Java, PHP",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Causet-Inc/causet-sdks.git"
@@ -21,6 +21,7 @@
     "build": "npm run build -w @causet/sdk-core && npm run build -w @causet/sdk && npm run build -w @causet/sdk-node && npm run build -w @causet/sdk-next",
     "test": "npm run test -w @causet/sdk-core && npm run test -w @causet/sdk && npm run test -w @causet/sdk-node && npm run test -w @causet/sdk-next",
     "test:php": "cd packages/laravel && composer test",
+    "validate:sdk-status": "node scripts/validate-sdk-status.mjs",
     "publish:dry-run": "npm run build && npm publish -w @causet/sdk-core --dry-run --access public && npm publish -w @causet/sdk --dry-run --access public && npm publish -w @causet/sdk-node --dry-run --access public && npm publish -w @causet/sdk-next --dry-run --access public"
   }
 }

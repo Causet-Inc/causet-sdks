@@ -1,6 +1,18 @@
 # causet/laravel-sdk
 
-Laravel package for the [Causet](https://causet.cloud) SaaS API. Submit intents, run named queries, and stream live events (intent SSE and causet-realtime ledger/projection SSE) from Laravel controllers, jobs, and services.
+Laravel package for the [Causet](https://causet.cloud) runtime API. Submit intents, run named queries, and stream live events from Laravel controllers, jobs, and services.
+
+## Status
+
+| | |
+| --- | --- |
+| **Source** | Available ([`packages/laravel`](.)) |
+| **Package distribution** | Source installation only (Packagist not registered) |
+| **Maturity** | Experimental |
+| **Support** | Not supported |
+| **Runtime compatibility** | PHP 8.2+; Laravel 11+ or 12+ |
+
+Primary API: `Causet::submitIntent()` / `$client->submitIntent()`. Deprecated alias: `intent()`.
 
 ## Features
 
@@ -19,7 +31,7 @@ Laravel package for the [Causet](https://causet.cloud) SaaS API. Submit intents,
 
 ## Installation
 
-### Composer (path repository — monorepo)
+Package distribution is currently **source installation only**. Use a Composer path repository:
 
 Add to your Laravel app's `composer.json`:
 
@@ -88,11 +100,11 @@ use Causet\Laravel\Facades\Causet;
 // In a controller, job, or command
 Causet::init();
 
-$result = Causet::emit('ticket_stream', 'tkt_1', 'CREATE_TICKET', [
+$result = Causet::submitIntent('ticket_stream', 'tkt_1', 'CREATE_TICKET', [
     'customer_id' => 'cust_1',
     'subject' => 'Billing question',
     'body' => 'I was charged twice.',
-]);
+], intentId: 'create-ticket-tkt_1');
 
 if ($result['accepted']) {
     $rows = Causet::runQuery('open_tickets', ['status' => 'open'], limit: 20);
@@ -122,7 +134,7 @@ class TicketController extends Controller
         $this->causet->init();
 
         return response()->json(
-            $this->causet->emit('ticket_stream', $ticketId, 'CLOSE_TICKET', [])
+            $this->causet->intent('ticket_stream', $ticketId, 'CLOSE_TICKET', [])
         );
     }
 }
@@ -171,7 +183,7 @@ $client->listEntities(streamName: 'orders', limit: 50);
 ### Intents
 
 ```php
-$result = $client->emit(
+$result = $client->submitIntent(
     'stream_id',
     'entity_id',
     'INTENT_TYPE',
@@ -180,7 +192,7 @@ $result = $client->emit(
 );
 // ['accepted' => bool, 'execution_id' => ?, 'error' => ?, 'state_patch' => ?]
 
-$client->emitStream(
+$client->intentStream(
     'stream_id', 'entity_id', 'INTENT_TYPE', $payload,
     function (array $ev): void {
         logger()->info($ev['event'] ?? 'message', $ev['data'] ?? []);
@@ -213,7 +225,7 @@ $off();
 
 ## WebSocket & SSE
 
-The Laravel SDK wraps REST, intent submission, **intent SSE** (`emitStream`), and **live stream events** via `connectStream()` (SSE transport). URLs are derived from your API URL:
+The Laravel SDK wraps REST, intent submission, **intent SSE** (`intentStream`), and **live stream events** via `connectStream()` (SSE transport). URLs are derived from your API URL:
 
 ```php
 use Causet\Laravel\Auth\ApiKeyTokenManager;
@@ -236,12 +248,12 @@ $wsUrl = ApiKeyTokenManager::deriveWsUrl(config('causet.api_url'));
 | Stream + fork | `sku_stream` | `sandbox` |
 | Stream + fork + entity | `sku_stream:sku-1` | `sandbox` |
 
-### Intent SSE (wrapped — `emitStream`)
+### Intent SSE (wrapped — `intentStream`)
 
 Stream intent execution progress from the runtime API:
 
 ```php
-Causet::emitStream('ticket_stream', 'tkt_1', 'PROCESS_REFUND', ['amount_cents' => 5000], function (array $ev): void {
+Causet::intentStream('ticket_stream', 'tkt_1', 'PROCESS_REFUND', ['amount_cents' => 5000], function (array $ev): void {
     // $ev = ['id' => '1', 'event' => 'COMPLETE', 'data' => [...]]
     logger()->info($ev['event'] ?? 'message', $ev['data'] ?? []);
 });
@@ -339,8 +351,8 @@ All methods on `CausetClient` are available via the `Causet` facade:
 
 ```php
 Causet::init();
-Causet::emit(...);
-Causet::emitStream(...);
+Causet::submitIntent(...);
+Causet::intentStream(...);
 Causet::connectStream(...);
 Causet::disconnectStream();
 Causet::runQuery(...);
@@ -359,7 +371,7 @@ use Causet\Laravel\Exceptions\CausetApiException;
 use Causet\Laravel\Exceptions\CausetAuthException;
 
 try {
-    Causet::emit(...);
+    Causet::submitIntent(...);
 } catch (CausetApiException $e) {
     report($e);
     return response()->json(['error' => $e->getMessage()], $e->statusCode);
@@ -379,8 +391,6 @@ try {
 | Query | `POST /v1/platforms/{p}/applications/{a}/forks/{fork}/queries/{slug}/run` |
 | Stream WebSocket | `WS wss://*.realtime.causet.cloud/ws` |
 | Stream SSE | `GET {realtimeUrl}/v1/platforms/{p}/applications/{a}/streams/{streamId}/events` |
-
-Full API reference: [`docs/saas-cloud-api-intents-queries.md`](../../../docs/saas-cloud-api-intents-queries.md)
 
 ## Testing your app
 

@@ -126,7 +126,27 @@ describe('CausetClient subscribe and getState', () => {
   });
 });
 
-describe('CausetClient emit', () => {
+describe('CausetClient submitIntent', () => {
+  it('submitIntent and deprecated intent/emit aliases share behavior', async () => {
+    const fetchImpl = createMockFetch([
+      (url, init) => {
+        if (init?.method === 'POST' && url.includes('/intents/submit')) {
+          return jsonResponse({ accepted: true, executionId: 'exec-1' });
+        }
+        return null!;
+      },
+    ]);
+    const client = makeClient({ fetchImpl });
+    const viaSubmit = await client.submitIntent('s', 'e', 'T', { x: 1 }, 'id-1');
+    const viaIntent = await client.intent('s', 'e', 'T', { x: 2 }, 'id-2');
+    const viaEmit = await client.emit('s', 'e', 'T', { x: 3 }, 'id-3');
+    expect(viaSubmit.accepted).toBe(true);
+    expect(viaIntent.accepted).toBe(true);
+    expect(viaEmit.accepted).toBe(true);
+  });
+});
+
+describe('CausetClient intent', () => {
   it('accepted intent applies statePatch', async () => {
     const fetchImpl = createMockFetch([
       (url, init) => {
@@ -145,7 +165,7 @@ describe('CausetClient emit', () => {
     ]);
     const client = makeClient({ fetchImpl });
     await client.subscribe('s', 'e');
-    const result = await client.emit('s', 'e', 'UPDATE', { x: 2 });
+    const result = await client.intent('s', 'e', 'UPDATE', { x: 2 });
     expect(result.accepted).toBe(true);
     expect(client.getState('s', 'e')).toEqual({ x: 2 });
   });
@@ -167,7 +187,7 @@ describe('CausetClient emit', () => {
     ]);
     const client = makeClient({ fetchImpl });
     await client.subscribe('s', 'e');
-    await client.emit('s', 'e', 'UPDATE', {});
+    await client.intent('s', 'e', 'UPDATE', {});
     expect(client.getState('s', 'e')).toEqual({ x: 3 });
   });
 
@@ -190,7 +210,7 @@ describe('CausetClient emit', () => {
     ]);
     const client = makeClient({ fetchImpl });
     await client.subscribe('s', 'e');
-    await client.emit('s', 'e', 'UPDATE', {});
+    await client.intent('s', 'e', 'UPDATE', {});
     expect(client.getState('s', 'e')).toEqual({ x: 99 });
     expect(stateCalls).toBe(2);
   });
@@ -209,7 +229,7 @@ describe('CausetClient emit', () => {
     ]);
     const client = makeClient({ fetchImpl });
     await client.subscribe('s', 'e');
-    await expect(client.emit('s', 'e', 'UPDATE', {})).rejects.toThrow(/INSUFFICIENT_FUNDS/);
+    await expect(client.intent('s', 'e', 'UPDATE', {})).rejects.toThrow(/INSUFFICIENT_FUNDS/);
     expect(client.getState('s', 'e')).toEqual({ x: 1 });
   });
 
@@ -223,7 +243,7 @@ describe('CausetClient emit', () => {
       },
     ]);
     const client = makeClient({ fetchImpl });
-    await expect(client.emit('s', 'e', 'FOO', {})).rejects.toThrow(/FOO was not accepted/);
+    await expect(client.intent('s', 'e', 'FOO', {})).rejects.toThrow(/FOO was not accepted/);
   });
 
   it('non-accepted intent throws rejection message', async () => {
@@ -240,12 +260,12 @@ describe('CausetClient emit', () => {
       },
     ]);
     const client = makeClient({ fetchImpl });
-    await expect(client.emit('s', 'e', 'TRANSFER_START', {})).rejects.toThrow(
+    await expect(client.intent('s', 'e', 'TRANSFER_START', {})).rejects.toThrow(
       /SAME_WALLET: Cannot transfer to the same wallet/,
     );
   });
 
-  it('emit with intentId', async () => {
+  it('intent with intentId', async () => {
     const fetchImpl = createMockFetch([
       (url, init) => {
         if (init?.method === 'POST' && url.includes('/intents/submit')) {
@@ -257,7 +277,7 @@ describe('CausetClient emit', () => {
       },
     ]);
     const client = makeClient({ fetchImpl });
-    const result = await client.emit('s', 'e', 'T', {}, 'id-1');
+    const result = await client.intent('s', 'e', 'T', {}, 'id-1');
     expect(result.accepted).toBe(true);
   });
 });
@@ -283,7 +303,7 @@ describe('CausetClient select', () => {
     await client.subscribe('s', 'e');
     const unsub = client.select('s', 'e', (s) => s.x, (v) => values.push(v));
     expect(values).toEqual([1]);
-    await client.emit('s', 'e', 'INC', {});
+    await client.intent('s', 'e', 'INC', {});
     expect(values).toEqual([1, 2]);
     unsub();
   });
@@ -372,8 +392,8 @@ describe('CausetClient runQuery and list helpers', () => {
   });
 });
 
-describe('CausetClient emitStream', () => {
-  it('emitStream with intentId includes it in body', async () => {
+describe('CausetClient intentStream', () => {
+  it('intentStream with intentId includes it in body', async () => {
     const fetchImpl = createMockFetch([
       (url, init) => {
         if (init?.method === 'POST' && url.startsWith(STREAM_URL)) {
@@ -386,10 +406,10 @@ describe('CausetClient emitStream', () => {
       },
     ]);
     const client = makeClient({ fetchImpl });
-    await client.emitStream('s', 'e', 'T', {}, () => undefined, 'intent-99');
+    await client.intentStream('s', 'e', 'T', {}, () => undefined, 'intent-99');
   });
 
-  it('emitStream generates intentId when omitted', async () => {
+  it('intentStream generates intentId when omitted', async () => {
     const fetchImpl = createMockFetch([
       (url, init) => {
         if (init?.method === 'POST' && url.startsWith(STREAM_URL)) {
@@ -403,7 +423,7 @@ describe('CausetClient emitStream', () => {
       },
     ]);
     const client = makeClient({ fetchImpl });
-    await client.emitStream('s', 'e', 'T', {}, () => undefined);
+    await client.intentStream('s', 'e', 'T', {}, () => undefined);
   });
 
   it('uses bound default fetchImpl in constructor', () => {
@@ -435,7 +455,7 @@ describe('CausetClient emitStream', () => {
     ]);
     const client = makeClient({ fetchImpl });
     const events: unknown[] = [];
-    await client.emitStream('s', 'e', 'T', {}, (ev) => events.push(ev.data), 'intent-1');
+    await client.intentStream('s', 'e', 'T', {}, (ev) => events.push(ev.data), 'intent-1');
     expect(events).toEqual([{ ok: true }]);
   });
 });
@@ -989,7 +1009,7 @@ describe('CausetClient edge cases', () => {
     ]);
     const client = makeClient({ fetchImpl });
     await client.subscribe('s', 'e');
-    await client.emit('s', 'e', 'UPDATE', {});
+    await client.intent('s', 'e', 'UPDATE', {});
     expect(client.getState('s', 'e')).toEqual({});
   });
 
@@ -1013,7 +1033,7 @@ describe('CausetClient edge cases', () => {
     await client.subscribe('s', 'e');
     client.select('s', 'e', (st) => st.x, (v) => values.push(v));
     expect(values).toEqual([1]);
-    await client.emit('s', 'e', 'T', {});
+    await client.intent('s', 'e', 'T', {});
     expect(values).toEqual([1, null]);
   });
 
@@ -1025,7 +1045,7 @@ describe('CausetClient edge cases', () => {
     makeClient().destroy();
   });
 
-  it('accepted emit without subscription is safe', async () => {
+  it('accepted intent without subscription is safe', async () => {
     const fetchImpl = createMockFetch([
       (url, init) => {
         if (init?.method === 'POST' && url.includes('/intents/submit')) {
@@ -1035,11 +1055,11 @@ describe('CausetClient edge cases', () => {
       },
     ]);
     const client = makeClient({ fetchImpl });
-    await client.emit('s', 'e', 'T', {});
+    await client.intent('s', 'e', 'T', {});
     expect(client.getState('s', 'e')).toBeNull();
   });
 
-  it('accepted emit with non-array statePatch skips apply', async () => {
+  it('accepted intent with non-array statePatch skips apply', async () => {
     const fetchImpl = createMockFetch([
       (url, init) => {
         if (init?.method === 'GET' && url.includes('/state')) {
@@ -1053,7 +1073,7 @@ describe('CausetClient edge cases', () => {
     ]);
     const client = makeClient({ fetchImpl });
     await client.subscribe('s', 'e');
-    await client.emit('s', 'e', 'T', {});
+    await client.intent('s', 'e', 'T', {});
     expect(client.getState('s', 'e')).toEqual({ x: 1 });
   });
 
@@ -1076,7 +1096,7 @@ describe('CausetClient edge cases', () => {
     const otherValues: unknown[] = [];
     await client.subscribe('s', 'e');
     client.select('other', 'entity', (st) => st.x, (v) => otherValues.push(v));
-    await client.emit('s', 'e', 'T', {});
+    await client.intent('s', 'e', 'T', {});
     expect(otherValues).toEqual([]);
   });
 
@@ -1100,7 +1120,7 @@ describe('CausetClient edge cases', () => {
     await client.subscribe('s', 'e');
     client.select('s', 'e', (st) => st.x, (v) => values.push(v));
     expect(values).toEqual([1]);
-    await client.emit('s', 'e', 'T', {});
+    await client.intent('s', 'e', 'T', {});
     expect(values).toEqual([1]);
   });
 
@@ -1124,7 +1144,7 @@ describe('CausetClient edge cases', () => {
     await client.subscribe('s', 'e');
     client.select('s', 'e', (st) => st.x, (v) => values.push(v));
     expect(values).toEqual([null]);
-    await client.emit('s', 'e', 'T', {});
+    await client.intent('s', 'e', 'T', {});
     expect(values).toEqual([null, 1]);
   });
 });

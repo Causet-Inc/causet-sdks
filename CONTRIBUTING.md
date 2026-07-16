@@ -75,9 +75,11 @@ Use clear, imperative subjects:
 
 Be respectful and constructive. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
-## Questions
+## Questions and support
 
-Open a [GitHub issue](https://github.com/Causet-Inc/causet-sdks/issues) for bugs, feature requests, or design discussion.
+Open a [GitHub issue](https://github.com/Causet-Inc/causet-sdks/issues/new/choose) for bugs, feature requests, or usage questions. See [SUPPORT.md](SUPPORT.md).
+
+Platform documentation: [docs.causet.io](https://docs.causet.io)
 
 ## Publishing releases
 

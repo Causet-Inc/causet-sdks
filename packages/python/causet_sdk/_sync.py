@@ -39,7 +39,7 @@ class CausetClientSync:
     def get_state(self, stream_id: str, entity_id: str) -> Optional[dict]:
         return self._client.get_state(stream_id, entity_id)
 
-    def emit(
+    def submit_intent(
         self,
         stream_id: str,
         entity_id: str,
@@ -48,10 +48,31 @@ class CausetClientSync:
         intent_id: Optional[str] = None,
     ) -> dict:
         return self._run(
-            self._client.emit(stream_id, entity_id, intent_type, payload, intent_id)
+            self._client.submit_intent(
+                stream_id, entity_id, intent_type, payload, intent_id
+            )
         )
 
-    def emit_stream(
+    def intent(
+        self,
+        stream_id: str,
+        entity_id: str,
+        intent_type: str,
+        payload: dict,
+        intent_id: Optional[str] = None,
+    ) -> dict:
+        import warnings
+
+        warnings.warn(
+            "intent() is deprecated; use submit_intent().",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.submit_intent(
+            stream_id, entity_id, intent_type, payload, intent_id
+        )
+
+    def intent_stream(
         self,
         stream_id: str,
         entity_id: str,
@@ -61,7 +82,7 @@ class CausetClientSync:
         intent_id: Optional[str] = None,
     ) -> None:
         return self._run(
-            self._client.emit_stream(
+            self._client.intent_stream(
                 stream_id, entity_id, intent_type, payload, on_event, intent_id
             )
         )

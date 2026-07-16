@@ -83,11 +83,11 @@ export function useCausetQuery(
   return { data, error, loading, refresh };
 }
 
-export function useCausetIntent() {
+export function useCausetSubmitIntent() {
   const client = useCausetClient();
   const [pending, setPending] = useState(false);
 
-  const emit = useCallback(
+  const submitIntent = useCallback(
     async (
       streamId: string,
       entityId: string,
@@ -96,7 +96,7 @@ export function useCausetIntent() {
     ) => {
       setPending(true);
       try {
-        return await client.emit(streamId, entityId, intentType, payload);
+        return await client.submitIntent(streamId, entityId, intentType, payload);
       } finally {
         setPending(false);
       }
@@ -104,18 +104,24 @@ export function useCausetIntent() {
     [client],
   );
 
-  const emitStream = useCallback(
+  const intentStream = useCallback(
     (
       streamId: string,
       entityId: string,
       intentType: string,
       payload: Record<string, unknown>,
-      onEvent: Parameters<CausetClient['emitStream']>[4],
-    ) => client.emitStream(streamId, entityId, intentType, payload, onEvent),
+      onEvent: Parameters<CausetClient['intentStream']>[4],
+    ) => client.intentStream(streamId, entityId, intentType, payload, onEvent),
     [client],
   );
 
-  return { emit, emitStream, pending };
+  return { submitIntent, intentStream, pending };
+}
+
+/** @deprecated Use useCausetSubmitIntent(). */
+export function useCausetIntent() {
+  const { submitIntent, intentStream, pending } = useCausetSubmitIntent();
+  return { intent: submitIntent, submitIntent, intentStream, pending };
 }
 
 /** Subscribe to entity state + optional WebSocket stream. */

@@ -89,16 +89,17 @@ describe('createServerCausetClient', () => {
   });
 });
 
-describe('serverEmitIntent', () => {
+describe('serverIntent', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('creates client, emits, and destroys', async () => {
-    const emitResult = { accepted: true };
+  it('creates client, submits intent, and destroys', async () => {
+    const intentResult = { accepted: true };
     const mockClient = {
       init: vi.fn().mockResolvedValue(undefined),
-      emit: vi.fn().mockResolvedValue(emitResult),
+      submitIntent: vi.fn().mockResolvedValue(intentResult),
+      intent: vi.fn().mockResolvedValue(intentResult),
       destroy: vi.fn(),
     };
     const core = await import('@causet/sdk-core');
@@ -106,15 +107,15 @@ describe('serverEmitIntent', () => {
       () => mockClient as unknown as InstanceType<typeof core.CausetClient>,
     );
 
-    const result = await server.serverEmitIntent('s', 'e', 'INTENT', { x: 1 }, {
+    const result = await server.serverIntent('s', 'e', 'INTENT', { x: 1 }, {
       platformSlug: 'p',
       appSlug: 'a',
       bearerToken: 'jwt',
     });
     expect(mockClient.init).toHaveBeenCalled();
-    expect(mockClient.emit).toHaveBeenCalledWith('s', 'e', 'INTENT', { x: 1 });
+    expect(mockClient.submitIntent).toHaveBeenCalledWith('s', 'e', 'INTENT', { x: 1 });
     expect(mockClient.destroy).toHaveBeenCalled();
-    expect(result).toEqual(emitResult);
+    expect(result).toEqual(intentResult);
   });
 });
 

@@ -1,11 +1,31 @@
 # Causet Go SDK
 
-Go client for the Causet SaaS API — entity state caching, intents (sync and SSE progress), named queries, projections, entity listing, and live stream events via **WebSocket** or **SSE**. Method names mirror the other Causet SDKs (TypeScript, Python, Java, Laravel) using Go's exported `PascalCase` convention: `Emit`, `EmitStream`, `Subscribe`/`Unsubscribe`/`GetState`, `On`, `Select`, `RunQuery`, `ListQueries`, `ConnectStream`/`DisconnectStream`, etc.
+Go client for the Causet runtime API — entity state caching, submit-intent (sync and SSE progress), named queries, projections, entity listing, and live stream events via **WebSocket** or **SSE**.
 
-## Install
+## Status
+
+| | |
+| --- | --- |
+| **Source** | Available ([`packages/go`](.)) |
+| **Package distribution** | Source installation only (`go.mod` declares `github.com/causet-inc/causet-sdk-go`; no public module release yet) |
+| **Maturity** | Experimental |
+| **Support** | Not supported |
+| **Runtime compatibility** | Go 1.22+ |
+
+Primary API: `client.SubmitIntent()`. Deprecated alias: `Intent()`.
+
+## Install from source
 
 ```bash
-go get github.com/causet-inc/causet-sdk-go
+git clone https://github.com/Causet-Inc/causet-sdks.git
+cd causet-sdks/packages/go
+go test ./...
+```
+
+In another Go module, add a `replace` directive until a public module tag is published:
+
+```go
+replace github.com/causet-inc/causet-sdk-go => ../causet-sdks/packages/go
 ```
 
 ## Configuration
@@ -82,12 +102,12 @@ Event types: `state`, `patch_op`, `stream_event`, `stream_connected`, `stream_di
 ```go
 // Synchronous — returns once accepted/rejected. Refreshes any Subscribe()d
 // cache for the entity via statePatch (or a refetch) and emits "state".
-result, err := client.Emit("sku_stream", "sku-1", "adjust_stock", map[string]any{"qty": -5})
+result, err := client.SubmitIntent("sku_stream", "sku-1", "adjust_stock", map[string]any{"qty": -5})
 
 // Streamed — SSE progress events (START, COMPLETE, ERROR, …). Blocks the
 // calling goroutine until the stream closes; run in its own goroutine for
 // non-blocking use.
-err = client.EmitStream(ctx, "sku_stream", "sku-1", "adjust_stock", map[string]any{"qty": -5}, func(ev causet.SseEvent) {
+err = client.IntentStream(ctx, "sku_stream", "sku-1", "adjust_stock", map[string]any{"qty": -5}, func(ev causet.SseEvent) {
     fmt.Println(ev.Event, ev.Data)
 }, "")
 ```
@@ -106,7 +126,7 @@ entities, err := client.ListEntities(causet.ListEntitiesOptions{StreamName: "sku
 
 ## WebSocket & SSE (live streams)
 
-Live events come from **causet-realtime** (`*.realtime.causet.cloud`), not the SaaS API host. URLs are derived from `APIURL` automatically.
+Live events come from the **realtime service** (`*.realtime.causet.cloud`), not the Causet Cloud gateway host.
 
 | Environment | Realtime HTTP | WebSocket |
 |-------------|---------------|-----------|
@@ -218,8 +238,9 @@ The SDK parses `data:` into `map[string]any` and passes it to your handler — s
 | `Subscribe`/`Unsubscribe`/`GetState` | Cached entity state |
 | `FetchState` | One-shot, uncached entity state read |
 | `Select(streamId, entityId, selector, handler)` | Derived-state watcher over cached state |
-| `Emit` | Submit an intent (sync) |
-| `EmitStream` | Submit an intent and stream SSE progress |
+| `Intent` | Deprecated — use `SubmitIntent` |
+| `SubmitIntent` | Submit an intent (sync) |
+| `IntentStream` | Submit an intent and stream SSE progress |
 | `RunQuery`/`ListQueries`/`GetQueryDefinition` | Named queries |
 | `ListProjections` | Projection table definitions |
 | `ListEntities` | Paginated entity ids |

@@ -4,6 +4,20 @@ Official **Python** SDK for the [Causet](https://causet.cloud) event-sourcing pl
 
 Provides both **async** (`CausetClient`) and **sync** (`CausetClientSync`) APIs.
 
+## Status
+
+| | |
+| --- | --- |
+| **Source** | Available ([`packages/python`](.)) |
+| **Package distribution** | Source installation only — **not on PyPI yet** |
+| **Maturity** | Preview |
+| **Support** | Community or best effort — [GitHub Issues](https://github.com/Causet-Inc/causet-sdks/issues) |
+
+Platform documentation: [docs.causet.io](https://docs.causet.io)
+| **Runtime compatibility** | Python 3.10+ |
+
+Primary API: `await client.submit_intent()`. Deprecated alias: `intent()`.
+
 ## Features
 
 - Intent submission via runtime API (`POST .../intents/submit`)
@@ -22,18 +36,17 @@ Provides both **async** (`CausetClient`) and **sync** (`CausetClientSync`) APIs.
 
 ## Installation
 
-```bash
-pip install causet-sdk
-```
-
-From the monorepo (editable):
+Package distribution is currently **source installation only**. The package is **not on PyPI yet**.
 
 ```bash
+git clone https://github.com/Causet-Inc/causet-sdks.git
 cd causet-sdks/packages/python
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 ```
+
+When PyPI publishing is announced, installation will be `pip install causet-sdk`.
 
 ## Quick start (async)
 
@@ -55,11 +68,12 @@ async def main():
     print(client.get_state("ticket_stream", "tkt_1"))
 
     # Submit intent
-    result = await client.emit(
+    result = await client.submit_intent(
         "ticket_stream",
         "tkt_1",
         "CREATE_TICKET",
         {"customer_id": "cust_1", "subject": "Help", "body": "..."},
+        intent_id="create-ticket-tkt_1-001",
     )
     print("Accepted:", result["accepted"], "Execution:", result.get("execution_id"))
 
@@ -68,7 +82,7 @@ async def main():
     print(f"{len(rows['items'])} tickets")
 
     # SSE intent progress
-    await client.emit_stream(
+    await client.intent_stream(
         "ticket_stream", "tkt_1", "PROCESS_REFUND", {"amount_cents": 5000},
         on_event=lambda ev: print(ev.get("event"), ev.get("data")),
     )
@@ -161,14 +175,14 @@ await client.list_entities(stream_name="orders", limit=50)
 ### Intents
 
 ```python
-result = await client.emit(
+result = await client.submit_intent(
     "stream", "entity", "INTENT_TYPE",
     {"key": "value"},
     intent_id="optional-idempotency-key",
 )
 # {"accepted": bool, "execution_id": str|None, "error": str|None, "state_patch": ...}
 
-await client.emit_stream(
+await client.intent_stream(
     "stream", "entity", "INTENT_TYPE", payload,
     on_event=lambda ev: print(ev),
     intent_id=None,
@@ -199,7 +213,7 @@ await client.get_projection_schema("projection_slug")
 
 ### Real-time streams — WebSocket & SSE
 
-Live ledger and projection events come from **causet-realtime** (`*.realtime.causet.cloud`), not the SaaS API host.
+Live ledger and projection events come from the **realtime service** (`*.realtime.causet.cloud`), not the Causet Cloud gateway host.
 
 | Environment | Realtime HTTP | WebSocket |
 |-------------|---------------|-----------|
@@ -316,7 +330,7 @@ The SDK parses `data:` into a `dict` and emits it on `stream_event` — same JSO
 | `websocket` | Duplex, channel replay, lowest latency |
 | `sse` | One-way fanout, HTTP-only environments |
 
-> **Note:** `emit_stream()` uses a separate SSE channel for **intent progress** (`START`, `COMPLETE`, `ERROR`) during intent execution — that is not the same as stream SSE above.
+> **Note:** `intent_stream()` uses a separate SSE channel for **intent progress** (`START`, `COMPLETE`, `ERROR`) during intent execution — that is not the same as stream SSE above.
 
 ### Selectors
 
@@ -344,7 +358,7 @@ client.on("*", lambda event_type, data: ...)  # wildcard
 from causet_sdk import CausetError, CausetAuthError, CausetApiError
 
 try:
-    await client.emit(...)
+    await client.intent(...)
 except CausetApiError as e:
     print(e.status_code, e.body)
 except CausetAuthError as e:
@@ -362,8 +376,6 @@ except CausetAuthError as e:
 | Query | `POST /v1/platforms/{p}/applications/{a}/forks/{fork}/queries/{slug}/run` |
 | Stream WebSocket | `WS wss://*.realtime.causet.cloud/ws` |
 | Stream SSE | `GET {realtimeUrl}/v1/platforms/{p}/applications/{a}/streams/{streamId}/events` |
-
-Full schemas: [`docs/saas-cloud-api-intents-queries.md`](../../../docs/saas-cloud-api-intents-queries.md)
 
 ## Development
 

@@ -32,7 +32,7 @@ class CausetClientTest extends TestCase
         );
     }
 
-    public function test_subscribe_and_emit_with_patch(): void
+    public function test_subscribe_and_intent_with_patch(): void
     {
         $client = $this->makeClient([
             new Response(200, [], json_encode(['snapshotJson' => ['x' => 1], 'snapshotVersion' => 1])),
@@ -43,12 +43,12 @@ class CausetClientTest extends TestCase
         ]);
         $client->subscribe('s', 'e');
         $this->assertSame(['x' => 1], $client->getState('s', 'e'));
-        $result = $client->emit('s', 'e', 'UPDATE', ['x' => 2]);
+        $result = $client->intent('s', 'e', 'UPDATE', ['x' => 2]);
         $this->assertTrue($result['accepted']);
         $this->assertSame(['x' => 2], $client->getState('s', 'e'));
     }
 
-    public function test_emit_refetches_without_patch(): void
+    public function test_intent_refetches_without_patch(): void
     {
         $client = $this->makeClient([
             new Response(200, [], json_encode(['snapshotJson' => ['x' => 1], 'snapshotVersion' => 1])),
@@ -56,7 +56,7 @@ class CausetClientTest extends TestCase
             new Response(200, [], json_encode(['snapshotJson' => ['x' => 99], 'snapshotVersion' => 2])),
         ]);
         $client->subscribe('s', 'e');
-        $client->emit('s', 'e', 'UPDATE', []);
+        $client->intent('s', 'e', 'UPDATE', []);
         $this->assertSame(['x' => 99], $client->getState('s', 'e'));
     }
 
@@ -84,7 +84,7 @@ class CausetClientTest extends TestCase
             $seen[] = $v;
         });
         $this->assertSame([1], $seen);
-        $client->emit('s', 'e', 'UPDATE', ['x' => 2]);
+        $client->intent('s', 'e', 'UPDATE', ['x' => 2]);
         $this->assertSame([1, 2], $seen);
         $unsub();
     }

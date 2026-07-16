@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func TestEmitStreamDeliversEvents(t *testing.T) {
+func TestIntentStreamDeliversEvents(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/v1/runtime/stream/platforms/plat/applications/app/intents/submit" {
 			t.Errorf("unexpected path: %s", r.URL.Path)
@@ -42,11 +42,11 @@ func TestEmitStreamDeliversEvents(t *testing.T) {
 	var events []SseEvent
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	err := c.EmitStream(ctx, "sku_stream", "sku-1", "adjust_stock", map[string]any{"qty": 5}, func(ev SseEvent) {
+	err := c.IntentStream(ctx, "sku_stream", "sku-1", "adjust_stock", map[string]any{"qty": 5}, func(ev SseEvent) {
 		events = append(events, ev)
 	}, "")
 	if err != nil {
-		t.Fatalf("EmitStream: %v", err)
+		t.Fatalf("IntentStream: %v", err)
 	}
 	if len(events) != 2 {
 		t.Fatalf("events = %#v", events)
@@ -60,7 +60,7 @@ func TestEmitStreamDeliversEvents(t *testing.T) {
 	}
 }
 
-func TestEmitStreamGeneratesIntentIDWhenEmpty(t *testing.T) {
+func TestIntentStreamGeneratesIntentIDWhenEmpty(t *testing.T) {
 	var capturedIntentID string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]any
@@ -74,9 +74,9 @@ func TestEmitStreamGeneratesIntentIDWhenEmpty(t *testing.T) {
 	defer srv.Close()
 
 	c := NewClient(Config{APIURL: srv.URL, PlatformSlug: "plat", AppSlug: "app", BearerToken: "t"})
-	err := c.EmitStream(context.Background(), "s", "e", "TYPE", map[string]any{}, func(SseEvent) {}, "")
+	err := c.IntentStream(context.Background(), "s", "e", "TYPE", map[string]any{}, func(SseEvent) {}, "")
 	if err != nil {
-		t.Fatalf("EmitStream: %v", err)
+		t.Fatalf("IntentStream: %v", err)
 	}
 	if capturedIntentID == "" {
 		t.Fatal("expected an auto-generated intentId")

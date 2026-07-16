@@ -45,7 +45,7 @@ class HttpClientTest extends TestCase
         $this->assertSame(0, $result['cursor']);
     }
 
-    public function test_emit_intent(): void
+    public function test_submit_intent(): void
     {
         $mock = new MockHandler([
             new Response(200, [], json_encode([
@@ -54,7 +54,7 @@ class HttpClientTest extends TestCase
                 'statePatch' => [['op' => 'replace', 'path' => '/x', 'value' => 2]],
             ])),
         ]);
-        $result = $this->client($mock)->emitIntent($this->cfg(), 's', 'e', 'UPDATE', ['x' => 2]);
+        $result = $this->client($mock)->submitIntent($this->cfg(), 's', 'e', 'UPDATE', ['x' => 2]);
         $this->assertTrue($result['accepted']);
         $this->assertSame('exec-1', $result['execution_id']);
     }

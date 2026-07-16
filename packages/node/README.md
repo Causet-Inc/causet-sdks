@@ -2,6 +2,16 @@
 
 Node.js SDK for [Causet](https://causet.cloud). Wraps `@causet/sdk-core` with a convenience factory and binds Node's native `fetch`.
 
+## Status
+
+| | |
+| --- | --- |
+| **Source** | Available ([`packages/node`](.)) |
+| **Package distribution** | Published to npm — `@causet/sdk-node` **0.1.0** |
+| **Maturity** | Supported preview |
+| **Support** | Supported for pilots |
+| **Runtime compatibility** | Node.js 18+ (ESM); native `fetch`; Node 21+ recommended for WebSocket |
+
 ## Features
 
 - Full [`@causet/sdk-core`](../core/README.md) API
@@ -43,9 +53,9 @@ const client = createCausetClient({
 await client.init();
 
 try {
-  const result = await client.emit('order_stream', 'ord_42', 'PLACE_ORDER', {
+  const result = await client.submitIntent('order_stream', 'ord_42', 'PLACE_ORDER', {
     items: [{ sku: 'ABC', qty: 2 }],
-  });
+  }, 'place-order-ord_42');
 
   if (!result.accepted) {
     console.error(result.error);
@@ -103,7 +113,7 @@ const causet = createCausetClient({ /* ... */ });
 await causet.init();
 
 app.post('/tickets', async (req, res) => {
-  const result = await causet.emit(
+  const result = await causet.intent(
     'ticket_stream',
     req.body.ticketId,
     'CREATE_TICKET',
@@ -116,7 +126,7 @@ app.post('/tickets', async (req, res) => {
 ### SSE intent with progress logging
 
 ```javascript
-await causet.emitStream(
+await causet.intentStream(
   'ticket_stream',
   'tkt_1',
   'PROCESS_REFUND',

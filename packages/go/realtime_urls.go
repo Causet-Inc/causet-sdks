@@ -10,7 +10,7 @@ var realtimeHostByAPI = map[string]string{
 	"api.causet.cloud":         "realtime.causet.cloud",
 }
 
-// DeriveRealtimeURL maps SaaS API URL to causet-realtime HTTP base.
+// DeriveRealtimeURL maps Causet Cloud gateway URL to realtime HTTP base.
 func DeriveRealtimeURL(apiURL string) string {
 	trimmed := strings.TrimRight(apiURL, "/")
 	u, err := url.Parse(trimmed)

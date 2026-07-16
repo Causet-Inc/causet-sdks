@@ -134,7 +134,7 @@ class HttpClient
      * @param  array<string, mixed>  $payload
      * @return array{accepted: bool, execution_id?: string, error?: string, state_patch?: mixed}
      */
-    public function emitIntent(
+    public function submitIntent(
         CausetHttpConfig $cfg,
         string $streamId,
         string $entityId,

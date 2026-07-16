@@ -37,9 +37,24 @@ export declare class CausetClient {
     subscribe(streamId: string, entityId: string): Promise<void>;
     unsubscribe(streamId: string, entityId: string): void;
     getState(streamId: string, entityId: string): Record<string, unknown> | null;
+    /**
+     * Submit an intent to the Causet runtime. On success the runtime processes the
+     * intent and may append committed business events — this call does not emit
+     * events directly.
+     */
+    submitIntent(streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, intentId?: string): Promise<IntentResult>;
+    /**
+     * @deprecated Use {@link submitIntent}. Submits an intent to the runtime; does not
+     * directly append a committed business event.
+     */
+    intent(streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, intentId?: string): Promise<IntentResult>;
+    /**
+     * @deprecated Use {@link submitIntent}. Submits an intent to the runtime; does not
+     * directly append a committed business event.
+     */
     emit(streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, intentId?: string): Promise<IntentResult>;
     /** Submit intent and stream SSE progress events (START, COMPLETE, ERROR, …). */
-    emitStream(streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, onEvent: (event: SseEvent) => void, intentId?: string, signal?: AbortSignal): Promise<void>;
+    intentStream(streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, onEvent: (event: SseEvent) => void, intentId?: string, signal?: AbortSignal): Promise<void>;
     runQuery(querySlug: string, input?: Record<string, unknown> | null, opts?: {
         limit?: number;
         offset?: number;

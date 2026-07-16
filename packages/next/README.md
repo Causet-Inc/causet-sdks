@@ -4,11 +4,23 @@ Next.js integration for [Causet](https://causet.cloud) — React hooks for clien
 
 Built on [`@causet/sdk-core`](../core/README.md).
 
+## Status
+
+| | |
+| --- | --- |
+| **Source** | Available ([`packages/next`](.)) |
+| **Package distribution** | Published to npm — `@causet/sdk-next` **0.1.0** |
+| **Maturity** | Supported preview |
+| **Support** | Supported for pilots |
+| **Runtime compatibility** | Next.js 14+; React 18+; Node.js 18+ |
+
+Primary hooks: `useCausetSubmitIntent()`, `serverSubmitIntent()`. Deprecated: `useCausetIntent()`, `serverIntent()`.
+
 ## Features
 
 - **`CausetProvider`** — React context with automatic `init()` / `destroy()` lifecycle
 - **Hooks** — `useCausetQuery`, `useCausetIntent`, `useCausetEntity`, `useCausetClient`
-- **Server helpers** — `createServerCausetClient`, `serverRunQuery`, `serverEmitIntent`
+- **Server helpers** — `createServerCausetClient`, `serverRunQuery`, `serverIntent`
 - **Env-based config** — reads `CAUSET_*` and `NEXT_PUBLIC_CAUSET_*` variables
 - App Router and Pages Router compatible (client hooks require `'use client'`)
 
@@ -128,12 +140,12 @@ export function TicketList() {
 import { useCausetIntent } from '@causet/sdk-next';
 
 export function CloseTicketButton({ ticketId }: { ticketId: string }) {
-  const { emit, pending } = useCausetIntent();
+  const { intent, pending } = useCausetIntent();
 
   return (
     <button
       disabled={pending}
-      onClick={() => emit('ticket_stream', ticketId, 'CLOSE_TICKET', {})}
+      onClick={() => intent('ticket_stream', ticketId, 'CLOSE_TICKET', {})}
     >
       {pending ? 'Closing…' : 'Close ticket'}
     </button>
@@ -252,13 +264,13 @@ export async function GET() {
 
 ```ts
 // app/api/tickets/[id]/close/route.ts
-import { serverEmitIntent } from '@causet/sdk-next/server';
+import { serverIntent } from '@causet/sdk-next/server';
 
 export async function POST(
   _req: Request,
   { params }: { params: { id: string } },
 ) {
-  const result = await serverEmitIntent(
+  const result = await serverIntent(
     'ticket_stream',
     params.id,
     'CLOSE_TICKET',
@@ -277,7 +289,7 @@ export async function POST(
 | `CausetProvider` | React context provider |
 | `useCausetClient()` | Access underlying `CausetClient` |
 | `useCausetQuery(slug, input?, opts?)` | `{ data, loading, error, refresh }` |
-| `useCausetIntent()` | `{ emit, emitStream, pending }` |
+| `useCausetIntent()` | `{ intent, intentStream, pending }` |
 | `useCausetEntity(stream, entity, connectWs?)` | Live entity state |
 | `CausetClient`, `CausetClientOptions`, `QueryResult` | Re-exported types |
 
@@ -287,7 +299,7 @@ export async function POST(
 |--------|-------------|
 | `createServerCausetClient(overrides?)` | Build client from env + overrides |
 | `serverRunQuery(slug, input?, config?)` | One-shot query (init → run → destroy) |
-| `serverEmitIntent(stream, entity, type, payload, config?)` | One-shot intent |
+| `serverIntent(stream, entity, type, payload, config?)` | One-shot intent |
 | `CausetEnvConfig` | Override type for env resolution |
 
 ### Env resolution order
@@ -318,11 +330,11 @@ Re-fetches when `querySlug`, serialized `input`, `limit`, or `includeTotal` chan
 ### `useCausetIntent`
 
 ```tsx
-const { emit, emitStream, pending } = useCausetIntent();
+const { intent, intentStream, pending } = useCausetIntent();
 
-await emit('stream', 'entity', 'INTENT', { key: 'val' });
+await intent('stream', 'entity', 'INTENT', { key: 'val' });
 
-await emitStream('stream', 'entity', 'INTENT', payload, (ev) => {
+await intentStream('stream', 'entity', 'INTENT', payload, (ev) => {
   console.log(ev.event, ev.data);
 });
 ```
@@ -340,10 +352,10 @@ Subscribes on mount, listens for `state` events, unsubscribes on unmount. When `
 ```tsx
 'use server';
 
-import { serverEmitIntent } from '@causet/sdk-next/server';
+import { serverIntent } from '@causet/sdk-next/server';
 
 export async function closeTicket(ticketId: string) {
-  return serverEmitIntent('ticket_stream', ticketId, 'CLOSE_TICKET', {});
+  return serverIntent('ticket_stream', ticketId, 'CLOSE_TICKET', {});
 }
 ```
 

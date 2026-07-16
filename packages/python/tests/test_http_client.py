@@ -6,7 +6,7 @@ import respx
 from causet_sdk.http_client import (
     CausetHttpConfig,
     fetch_state,
-    emit_intent,
+    submit_intent,
     run_query,
     stringify_query_input,
     list_queries,
@@ -114,7 +114,7 @@ class TestFetchState:
             assert result["state"]["field"] == "value"
 
 
-class TestEmitIntent:
+class TestSubmitIntent:
     async def test_accepted(self):
         with respx.mock:
             url = f"{RUNTIME_PREFIX}/intents/submit"
@@ -126,7 +126,7 @@ class TestEmitIntent:
                     "statePatch": [{"op": "replace", "path": "/x", "value": 1}],
                 },
             )
-            result = await emit_intent(
+            result = await submit_intent(
                 CFG, "orders", "order-1", "PLACE_ORDER", {"foo": "bar"}
             )
             assert result["accepted"] is True
@@ -137,7 +137,7 @@ class TestEmitIntent:
             url = f"{RUNTIME_PREFIX}/intents/submit"
             route = respx.post(url)
             route.return_value = httpx.Response(200, json={"accepted": True})
-            await emit_intent(CFG, "s", "e", "T", {})
+            await submit_intent(CFG, "s", "e", "T", {})
             req = route.calls[0].request
             assert req.headers["authorization"] == "Bearer jwt-test"
 
@@ -145,7 +145,7 @@ class TestEmitIntent:
         with respx.mock:
             route = respx.post(f"{RUNTIME_PREFIX}/intents/submit")
             route.return_value = httpx.Response(200, json={"accepted": True})
-            await emit_intent(CFG, "s", "e", "T", {}, intent_id="custom-id")
+            await submit_intent(CFG, "s", "e", "T", {}, intent_id="custom-id")
             body = json.loads(route.calls[0].request.content.decode())
             assert body["intentId"] == "custom-id"
 
@@ -153,7 +153,7 @@ class TestEmitIntent:
         with respx.mock:
             route = respx.post(f"{RUNTIME_PREFIX}/intents/submit")
             route.return_value = httpx.Response(200, json={"accepted": True})
-            await emit_intent(CFG, "s", "e", "T", {})
+            await submit_intent(CFG, "s", "e", "T", {})
             body = json.loads(route.calls[0].request.content.decode())
             assert isinstance(body["intentId"], str)
             assert body["intentId"]

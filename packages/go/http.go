@@ -111,22 +111,30 @@ func (c *Client) FetchState(streamID, entityID string) (map[string]any, int64, e
 	return state, cursor, nil
 }
 
-// Emit submits an intent to the runtime and returns the raw response
-// (accepted/executionId/error/statePatch). If entityID is subscribed
+// SubmitIntent submits an intent to the Causet runtime and returns the raw
+// response (accepted/executionId/error/statePatch). If entityID is subscribed
 // (see Subscribe), the cached state is refreshed via statePatch or refetch
 // and "state"/"patch_op" events are emitted.
-func (c *Client) Emit(streamID, entityID, intentType string, payload map[string]any) (map[string]any, error) {
-	result, err := c.emitIntentHTTP(streamID, entityID, intentType, payload, "")
+//
+// This submits an intent for processing; it does not directly append a committed
+// business event.
+func (c *Client) SubmitIntent(streamID, entityID, intentType string, payload map[string]any) (map[string]any, error) {
+	result, err := c.submitIntentHTTP(streamID, entityID, intentType, payload, "")
 	if err != nil {
 		return nil, err
 	}
 	if accepted, _ := result["accepted"].(bool); accepted {
-		c.refreshSubscriptionAfterEmit(streamID, entityID, result)
+		c.refreshSubscriptionAfterIntent(streamID, entityID, result)
 	}
 	return result, nil
 }
 
-func (c *Client) emitIntentHTTP(streamID, entityID, intentType string, payload map[string]any, intentID string) (map[string]any, error) {
+// Intent is deprecated; use SubmitIntent.
+func (c *Client) Intent(streamID, entityID, intentType string, payload map[string]any) (map[string]any, error) {
+	return c.SubmitIntent(streamID, entityID, intentType, payload)
+}
+
+func (c *Client) submitIntentHTTP(streamID, entityID, intentType string, payload map[string]any, intentID string) (map[string]any, error) {
 	token, err := c.token()
 	if err != nil {
 		return nil, err

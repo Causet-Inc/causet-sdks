@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { CausetApiError } from '../errors.js';
 import {
-  emitIntent,
+  submitIntent,
   fetchState,
   getQueryDefinition,
   listEntities,
@@ -271,7 +271,7 @@ describe('fetchState', () => {
   });
 });
 
-describe('emitIntent', () => {
+describe('submitIntent', () => {
   it('returns accepted result', async () => {
     const fetchImpl = createMockFetch([
       (url, init) => {
@@ -285,7 +285,7 @@ describe('emitIntent', () => {
         return null!;
       },
     ]);
-    const result = await emitIntent(CFG, 'orders', 'order-1', 'PLACE_ORDER', { foo: 'bar' }, undefined, fetchImpl);
+    const result = await submitIntent(CFG, 'orders', 'order-1', 'PLACE_ORDER', { foo: 'bar' }, undefined, fetchImpl);
     expect(result.accepted).toBe(true);
     expect(result.executionId).toBe('exec-1');
     expect(result.statePatch).toEqual([{ op: 'replace', path: '/x', value: 1 }]);
@@ -301,7 +301,7 @@ describe('emitIntent', () => {
         return null!;
       },
     ]);
-    await emitIntent(CFG, 's', 'e', 'T', {}, undefined, fetchImpl);
+    await submitIntent(CFG, 's', 'e', 'T', {}, undefined, fetchImpl);
   });
 
   it('generates intentId when omitted', async () => {
@@ -316,7 +316,7 @@ describe('emitIntent', () => {
         return null!;
       },
     ]);
-    await emitIntent(CFG, 's', 'e', 'T', {}, undefined, fetchImpl);
+    await submitIntent(CFG, 's', 'e', 'T', {}, undefined, fetchImpl);
   });
 
   it('includes intentId when provided', async () => {
@@ -330,7 +330,7 @@ describe('emitIntent', () => {
         return null!;
       },
     ]);
-    await emitIntent(CFG, 's', 'e', 'T', {}, 'intent-123', fetchImpl);
+    await submitIntent(CFG, 's', 'e', 'T', {}, 'intent-123', fetchImpl);
   });
 
   it('uses explicit forkId in runtime submit body', async () => {
@@ -344,7 +344,7 @@ describe('emitIntent', () => {
         return null!;
       },
     ]);
-    await emitIntent({ ...CFG, forkId: 'dev' }, 's', 'e', 'T', {}, undefined, fetchImpl);
+    await submitIntent({ ...CFG, forkId: 'dev' }, 's', 'e', 'T', {}, undefined, fetchImpl);
   });
 
   it('defaults forkId to main in submit body', async () => {
@@ -358,7 +358,7 @@ describe('emitIntent', () => {
         return null!;
       },
     ]);
-    await emitIntent(CFG_NO_FORK, 's', 'e', 'T', {}, undefined, fetchImpl);
+    await submitIntent(CFG_NO_FORK, 's', 'e', 'T', {}, undefined, fetchImpl);
   });
 
   it('works without bearer token', async () => {
@@ -372,7 +372,7 @@ describe('emitIntent', () => {
         return null!;
       },
     ]);
-    const result = await emitIntent(
+    const result = await submitIntent(
       { ...CFG, bearerToken: undefined },
       's',
       'e',
@@ -398,7 +398,7 @@ describe('emitIntent', () => {
         return null!;
       },
     ]);
-    const result = await emitIntent(CFG, 's', 'e', 'TRANSFER_START', {}, undefined, fetchImpl);
+    const result = await submitIntent(CFG, 's', 'e', 'TRANSFER_START', {}, undefined, fetchImpl);
     expect(result.accepted).toBe(false);
     expect(result.rejectionCode).toBe('INSUFFICIENT_FUNDS');
     expect(result.rejectionMessage).toBe('Wallet balance is too low for this transfer');
@@ -414,7 +414,7 @@ describe('emitIntent', () => {
         return null!;
       },
     ]);
-    const result = await emitIntent(CFG, 's', 'e', 'TRANSFER_START', {}, undefined, fetchImpl);
+    const result = await submitIntent(CFG, 's', 'e', 'TRANSFER_START', {}, undefined, fetchImpl);
     expect(result.error).toBe('SAME_WALLET');
   });
 });

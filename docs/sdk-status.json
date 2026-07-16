@@ -1,0 +1,105 @@
+{
+  "$comment": "Authoritative SDK status — validated by scripts/validate-sdk-status.mjs",
+  "lastVerified": "2026-07-16",
+  "sdks": [
+    {
+      "id": "javascript-typescript",
+      "name": "JavaScript / TypeScript SDK",
+      "source": "Available",
+      "packageDistribution": "Published to npm",
+      "packages": [
+        { "name": "@causet/sdk", "registry": "npm", "version": "0.1.0", "path": "packages/js" },
+        { "name": "@causet/sdk-core", "registry": "npm", "version": "0.1.0", "path": "packages/core" },
+        { "name": "@causet/sdk-node", "registry": "npm", "version": "0.1.0", "path": "packages/node" },
+        { "name": "@causet/sdk-next", "registry": "npm", "version": "0.1.0", "path": "packages/next" }
+      ],
+      "maturity": "Supported preview",
+      "support": "Supported for pilots",
+      "runtimeCompatibility": "Node.js 18+ (ESM); browsers with native fetch; TypeScript 5+ declarations",
+      "readme": "packages/js/README.md"
+    },
+    {
+      "id": "python",
+      "name": "Python SDK",
+      "source": "Available",
+      "packageDistribution": "Source installation only",
+      "packages": [
+        { "name": "causet-sdk", "registry": "pypi", "version": null, "path": "packages/python", "published": false, "note": "Not on PyPI yet. Install from source." }
+      ],
+      "maturity": "Preview",
+      "support": "Community or best effort",
+      "runtimeCompatibility": "Python 3.10+",
+      "readme": "packages/python/README.md"
+    },
+    {
+      "id": "java",
+      "name": "Java SDK",
+      "source": "Available",
+      "packageDistribution": "Source installation only — Maven Central coming soon",
+      "packages": [
+        {
+          "name": "com.causet:causet-sdk",
+          "registry": "maven-central",
+          "version": "0.1.0",
+          "path": "packages/java",
+          "published": false,
+          "note": "Maven Central publishing coming soon. Install from source until then."
+        }
+      ],
+      "maturity": "Preview",
+      "support": "Community or best effort",
+      "runtimeCompatibility": "Java 17+",
+      "readme": "packages/java/README.md"
+    },
+    {
+      "id": "php",
+      "name": "PHP SDK (Laravel)",
+      "source": "Available",
+      "packageDistribution": "Source installation only",
+      "packages": [
+        {
+          "name": "causet/laravel-sdk",
+          "registry": "packagist",
+          "version": "0.1.0",
+          "path": "packages/laravel",
+          "published": false
+        }
+      ],
+      "maturity": "Experimental",
+      "support": "Not supported",
+      "runtimeCompatibility": "PHP 8.2+; Laravel 11+ or 12+",
+      "readme": "packages/laravel/README.md"
+    },
+    {
+      "id": "go",
+      "name": "Go SDK",
+      "source": "Available",
+      "packageDistribution": "Source installation only",
+      "packages": [
+        {
+          "name": "github.com/causet-inc/causet-sdk-go",
+          "registry": "go-module",
+          "version": null,
+          "path": "packages/go",
+          "published": false,
+          "note": "Module path is declared in go.mod but no public module release is available from this monorepo yet."
+        }
+      ],
+      "maturity": "Experimental",
+      "support": "Not supported",
+      "runtimeCompatibility": "Go 1.22+",
+      "readme": "packages/go/README.md"
+    },
+    {
+      "id": "rust",
+      "name": "Rust SDK",
+      "source": "Not available",
+      "packageDistribution": "Not published",
+      "packages": [],
+      "maturity": "Planned",
+      "support": "Not supported",
+      "runtimeCompatibility": "—",
+      "readme": null
+    }
+  ]
+}

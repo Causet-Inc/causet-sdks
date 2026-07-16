@@ -8,7 +8,7 @@
     <artifactId>causet-sdk</artifactId>
     <version>0.1.0</version>
     <name>Causet Java SDK</name>
-    <description>Java client for Causet SaaS API — intents, state, WebSocket and SSE streaming</description>
+    <description>Java client for Causet runtime API — submit intents, state, WebSocket and SSE streaming</description>
 
     <properties>
         <maven.compiler.release>17</maven.compiler.release>

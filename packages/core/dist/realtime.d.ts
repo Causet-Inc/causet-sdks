@@ -10,7 +10,7 @@ export interface StreamEventsUrlOptions {
 }
 /**
  * HTTP base URL for causet-realtime (SSE).
- * Maps API URLs to the dedicated realtime service — not the SaaS API host.
+ * Maps API URLs to the dedicated realtime service — not the Causet Cloud gateway host.
  */
 export declare function deriveRealtimeUrl(apiUrl: string): string;
 /** WebSocket URL from causet-realtime HTTP base. */

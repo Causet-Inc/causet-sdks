@@ -1,7 +1,7 @@
 import { Emitter } from './emitter.js';
 import { CausetApiError, CausetError } from './errors.js';
 import {
-  emitIntent,
+  submitIntent,
   fetchState,
   getQueryDefinition,
   listEntities,
@@ -211,7 +211,12 @@ export class CausetClient {
     return sub ? deepClone(sub.state) : null;
   }
 
-  async emit(
+  /**
+   * Submit an intent to the Causet runtime. On success the runtime processes the
+   * intent and may append committed business events — this call does not emit
+   * events directly.
+   */
+  async submitIntent(
     streamId: string,
     entityId: string,
     intentType: string,
@@ -219,7 +224,7 @@ export class CausetClient {
     intentId?: string,
   ): Promise<IntentResult> {
     const result = await this.runWithRetry((cfg) =>
-      emitIntent(cfg, streamId, entityId, intentType, payload, intentId, this.fetchImpl),
+      submitIntent(cfg, streamId, entityId, intentType, payload, intentId, this.fetchImpl),
     );
     if (!result.accepted) {
       throw new CausetError(result.error || `Intent ${intentType} was not accepted`);
@@ -228,8 +233,36 @@ export class CausetClient {
     return result;
   }
 
+  /**
+   * @deprecated Use {@link submitIntent}. Submits an intent to the runtime; does not
+   * directly append a committed business event.
+   */
+  async intent(
+    streamId: string,
+    entityId: string,
+    intentType: string,
+    payload: Record<string, unknown>,
+    intentId?: string,
+  ): Promise<IntentResult> {
+    return this.submitIntent(streamId, entityId, intentType, payload, intentId);
+  }
+
+  /**
+   * @deprecated Use {@link submitIntent}. Submits an intent to the runtime; does not
+   * directly append a committed business event.
+   */
+  async emit(
+    streamId: string,
+    entityId: string,
+    intentType: string,
+    payload: Record<string, unknown>,
+    intentId?: string,
+  ): Promise<IntentResult> {
+    return this.submitIntent(streamId, entityId, intentType, payload, intentId);
+  }
+
   /** Submit intent and stream SSE progress events (START, COMPLETE, ERROR, …). */
-  async emitStream(
+  async intentStream(
     streamId: string,
     entityId: string,
     intentType: string,

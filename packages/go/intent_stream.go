@@ -20,12 +20,12 @@ type SseEvent struct {
 	Data  any
 }
 
-// EmitStream submits an intent and streams its execution progress
-// (START, COMPLETE, ERROR, …) via SSE. Unlike Emit, this call blocks the
+// IntentStream submits an intent and streams its execution progress
+// (START, COMPLETE, ERROR, …) via SSE. Unlike Intent, this call blocks the
 // calling goroutine until the stream closes; run it in its own goroutine for
 // non-blocking use. intentID is optional — pass "" to auto-generate one.
 // Parameter order mirrors the other Causet SDKs: (..., payload, onEvent, intentID).
-func (c *Client) EmitStream(ctx context.Context, streamID, entityID, intentType string, payload map[string]any, onEvent func(SseEvent), intentID string) error {
+func (c *Client) IntentStream(ctx context.Context, streamID, entityID, intentType string, payload map[string]any, onEvent func(SseEvent), intentID string) error {
 	token, err := c.token()
 	if err != nil {
 		return err

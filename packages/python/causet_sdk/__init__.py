@@ -1,4 +1,4 @@
-"""Causet Python SDK — event-sourcing client for the Causet SaaS API."""
+"""Causet Python SDK — submit intents, read state, and query projections."""
 
 from causet_sdk.client import CausetClient
 from causet_sdk._sync import CausetClientSync

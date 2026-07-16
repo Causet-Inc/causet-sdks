@@ -3,7 +3,7 @@ export declare function fetchState(cfg: CausetHttpConfig, streamId: string, enti
     state: unknown;
     cursor: number;
 }>;
-export declare function emitIntent(cfg: CausetHttpConfig, streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, intentId?: string, fetchImpl?: typeof fetch): Promise<IntentResult>;
+export declare function submitIntent(cfg: CausetHttpConfig, streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, intentId?: string, fetchImpl?: typeof fetch): Promise<IntentResult>;
 export declare function runQuery(cfg: CausetHttpConfig, querySlug: string, input: Record<string, unknown> | null | undefined, opts?: {
     limit?: number;
     offset?: number;

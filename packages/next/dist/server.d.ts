@@ -9,7 +9,9 @@ export interface CausetEnvConfig {
 }
 /** Create a server-side client from environment variables. */
 export declare function createServerCausetClient(overrides?: CausetEnvConfig): CausetClient;
-export declare function serverEmitIntent(streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, config?: CausetEnvConfig): Promise<import("@causet/sdk-core").IntentResult>;
+export declare function serverSubmitIntent(streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, config?: CausetEnvConfig): Promise<import("@causet/sdk-core").IntentResult>;
+/** @deprecated Use serverSubmitIntent(). */
+export declare function serverIntent(streamId: string, entityId: string, intentType: string, payload: Record<string, unknown>, config?: CausetEnvConfig): Promise<import("@causet/sdk-core").IntentResult>;
 export declare function serverRunQuery(querySlug: string, input?: Record<string, unknown> | null, config?: CausetEnvConfig & {
     limit?: number;
     cursor?: string;

@@ -47,7 +47,7 @@ export function createServerCausetClient(overrides: CausetEnvConfig = {}): Cause
   return new CausetClient(opts);
 }
 
-export async function serverEmitIntent(
+export async function serverSubmitIntent(
   streamId: string,
   entityId: string,
   intentType: string,
@@ -57,10 +57,21 @@ export async function serverEmitIntent(
   const client = createServerCausetClient(config);
   await client.init();
   try {
-    return await client.emit(streamId, entityId, intentType, payload);
+    return await client.submitIntent(streamId, entityId, intentType, payload);
   } finally {
     client.destroy();
   }
+}
+
+/** @deprecated Use serverSubmitIntent(). */
+export async function serverIntent(
+  streamId: string,
+  entityId: string,
+  intentType: string,
+  payload: Record<string, unknown>,
+  config?: CausetEnvConfig,
+) {
+  return serverSubmitIntent(streamId, entityId, intentType, payload, config);
 }
 
 export async function serverRunQuery(

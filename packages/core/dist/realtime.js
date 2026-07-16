@@ -4,7 +4,7 @@ const REALTIME_HOST_BY_API = {
 };
 /**
  * HTTP base URL for causet-realtime (SSE).
- * Maps API URLs to the dedicated realtime service — not the SaaS API host.
+ * Maps API URLs to the dedicated realtime service — not the Causet Cloud gateway host.
  */
 export function deriveRealtimeUrl(apiUrl) {
     const trimmed = apiUrl.replace(/\/+$/, '');

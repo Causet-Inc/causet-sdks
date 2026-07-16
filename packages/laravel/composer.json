@@ -1,6 +1,6 @@
 {
   "name": "causet/laravel-sdk",
-  "description": "Laravel SDK for the Causet SaaS API — intents, queries, SSE",
+  "description": "Laravel SDK for the Causet runtime API — submit intents, queries, SSE",
   "type": "library",
   "license": "MIT",
   "version": "0.1.0",

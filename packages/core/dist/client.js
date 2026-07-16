@@ -1,6 +1,6 @@
 import { Emitter } from './emitter.js';
 import { CausetApiError, CausetError } from './errors.js';
-import { emitIntent, fetchState, getQueryDefinition, listEntities, listProjections, listQueries, runQuery, } from './http-client.js';
+import { submitIntent, fetchState, getQueryDefinition, listEntities, listProjections, listQueries, runQuery, } from './http-client.js';
 import { applyPatch } from './patch.js';
 import { generateIntentId } from './intent-id.js';
 import { submitIntentStream } from './transport-sse.js';
@@ -163,16 +163,35 @@ export class CausetClient {
         const sub = this.subscriptions.get(subKey(streamId, entityId));
         return sub ? deepClone(sub.state) : null;
     }
-    async emit(streamId, entityId, intentType, payload, intentId) {
-        const result = await this.runWithRetry((cfg) => emitIntent(cfg, streamId, entityId, intentType, payload, intentId, this.fetchImpl));
+    /**
+     * Submit an intent to the Causet runtime. On success the runtime processes the
+     * intent and may append committed business events — this call does not emit
+     * events directly.
+     */
+    async submitIntent(streamId, entityId, intentType, payload, intentId) {
+        const result = await this.runWithRetry((cfg) => submitIntent(cfg, streamId, entityId, intentType, payload, intentId, this.fetchImpl));
         if (!result.accepted) {
             throw new CausetError(result.error || `Intent ${intentType} was not accepted`);
         }
         await this.refreshSubscriptionAfterIntent(streamId, entityId, result);
         return result;
     }
+    /**
+     * @deprecated Use {@link submitIntent}. Submits an intent to the runtime; does not
+     * directly append a committed business event.
+     */
+    async intent(streamId, entityId, intentType, payload, intentId) {
+        return this.submitIntent(streamId, entityId, intentType, payload, intentId);
+    }
+    /**
+     * @deprecated Use {@link submitIntent}. Submits an intent to the runtime; does not
+     * directly append a committed business event.
+     */
+    async emit(streamId, entityId, intentType, payload, intentId) {
+        return this.submitIntent(streamId, entityId, intentType, payload, intentId);
+    }
     /** Submit intent and stream SSE progress events (START, COMPLETE, ERROR, …). */
-    async emitStream(streamId, entityId, intentType, payload, onEvent, intentId, signal) {
+    async intentStream(streamId, entityId, intentType, payload, onEvent, intentId, signal) {
         const token = await this.getTokenPublic();
         const body = {
             intentId: intentId?.trim() || generateIntentId(),
