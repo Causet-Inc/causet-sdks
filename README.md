@@ -19,7 +19,16 @@ Authoritative machine-readable status: [`docs/sdk-status.json`](docs/sdk-status.
 | [Go](packages/go/README.md) | Available | Source installation only | Experimental | Not supported | Go 1.22+ |
 | Rust | Not available | Not published | Planned | Not supported | — |
 
-### npm packages (verified public)
+### npm packages
+
+The following packages are published to npm:
+
+- `@causet/sdk`
+- `@causet/sdk-core`
+- `@causet/sdk-node`
+- `@causet/sdk-next`
+
+Latest verified npm version: **0.2.0**
 
 ```bash
 npm install @causet/sdk          # browser / bundler apps
@@ -27,8 +36,6 @@ npm install @causet/sdk-node     # Node.js backends
 npm install @causet/sdk-next     # Next.js + React
 npm install @causet/sdk-core     # low-level TypeScript client
 ```
-
-Latest on npm today: **0.1.0**. This branch releases **0.2.0** — publish after merge via GitHub Release `v0.2.0`.
 
 Packages **not** on public registries yet: `causet-sdk` (PyPI — not published yet), `com.causet:causet-sdk` (Maven Central — coming soon), `causet/laravel-sdk` (Packagist), `github.com/causet-inc/causet-sdk-go` (Go module). Use source installation from this repository until a release is announced.
 
@@ -48,7 +55,7 @@ Packages **not** on public registries yet: `causet-sdk` (PyPI — not published 
 
 ## What Causet SDKs do
 
-Causet is an event-sourcing platform. Your application DSL defines **streams**, **entities**, **intents**, **projections**, and **queries**. SDKs call the **Causet Cloud gateway** (Managed Causet Cloud or a local management API), which proxies to the **runtime API** and query services.
+Causet is a deterministic runtime and compiler for stateful backend workflows. Your application DSL defines **streams**, **entities**, **intents**, **projections**, and **queries**. SDKs call the **Causet Cloud gateway** (Managed Causet Cloud or a local management API), which proxies to the **runtime API** and query services.
 
 ```
 ┌─────────────┐     HTTPS/WSS      ┌────────────────────┐     ┌─────────────────┐
