@@ -8,10 +8,10 @@
       "source": "Available",
       "packageDistribution": "Published to npm",
       "packages": [
-        { "name": "@causet/sdk", "registry": "npm", "version": "0.1.0", "path": "packages/js" },
-        { "name": "@causet/sdk-core", "registry": "npm", "version": "0.1.0", "path": "packages/core" },
-        { "name": "@causet/sdk-node", "registry": "npm", "version": "0.1.0", "path": "packages/node" },
-        { "name": "@causet/sdk-next", "registry": "npm", "version": "0.1.0", "path": "packages/next" }
+        { "name": "@causet/sdk", "registry": "npm", "version": "0.2.0", "path": "packages/js" },
+        { "name": "@causet/sdk-core", "registry": "npm", "version": "0.2.0", "path": "packages/core" },
+        { "name": "@causet/sdk-node", "registry": "npm", "version": "0.2.0", "path": "packages/node" },
+        { "name": "@causet/sdk-next", "registry": "npm", "version": "0.2.0", "path": "packages/next" }
       ],
       "maturity": "Supported preview",
       "support": "Supported for pilots",
@@ -40,7 +40,7 @@
         {
           "name": "com.causet:causet-sdk",
           "registry": "maven-central",
-          "version": "0.1.0",
+          "version": "0.2.0",
           "path": "packages/java",
           "published": false,
           "note": "Maven Central publishing coming soon. Install from source until then."
@@ -60,7 +60,7 @@
         {
           "name": "causet/laravel-sdk",
           "registry": "packagist",
-          "version": "0.1.0",
+          "version": "0.2.0",
           "path": "packages/laravel",
           "published": false
         }

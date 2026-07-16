@@ -9,7 +9,7 @@ This is the shared implementation used by `@causet/sdk`, `@causet/sdk-node`, and
 | | |
 | --- | --- |
 | **Source** | Available ([`packages/core`](.)) |
-| **Package distribution** | Published to npm — `@causet/sdk-core` **0.1.0** |
+| **Package distribution** | Published to npm — `@causet/sdk-core` **0.2.0** |
 | **Maturity** | Supported preview |
 | **Support** | Supported for pilots |
 | **Runtime compatibility** | Node.js 18+; browsers with `fetch`; TypeScript 5+; ESM only |

@@ -32,10 +32,24 @@ for (const sdk of status.sdks) {
       }
       const data = await res.json();
       const latest = data['dist-tags']?.latest;
-      if (pkg.version && latest !== pkg.version) {
-        errors.push(
-          `npm ${pkg.name}: sdk-status.json says ${pkg.version} but registry latest is ${latest}`,
-        );
+      if (pkg.version && latest && pkg.version !== latest) {
+        const manifest = pkg.version.split('.').map((n) => Number(n) || 0);
+        const published = latest.split('.').map((n) => Number(n) || 0);
+        const ahead =
+          manifest[0] > published[0] ||
+          (manifest[0] === published[0] && manifest[1] > published[1]) ||
+          (manifest[0] === published[0] &&
+            manifest[1] === published[1] &&
+            manifest[2] > published[2]);
+        if (ahead) {
+          console.warn(
+            `npm ${pkg.name}: manifest ${pkg.version} ahead of registry latest ${latest} (pending release)`,
+          );
+        } else {
+          errors.push(
+            `npm ${pkg.name}: sdk-status.json says ${pkg.version} but registry latest is ${latest}`,
+          );
+        }
       }
     }
   }

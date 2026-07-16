@@ -7,7 +7,7 @@ Node.js SDK for [Causet](https://causet.cloud). Wraps `@causet/sdk-core` with a 
 | | |
 | --- | --- |
 | **Source** | Available ([`packages/node`](.)) |
-| **Package distribution** | Published to npm — `@causet/sdk-node` **0.1.0** |
+| **Package distribution** | Published to npm — `@causet/sdk-node` **0.2.0** |
 | **Maturity** | Supported preview |
 | **Support** | Supported for pilots |
 | **Runtime compatibility** | Node.js 18+ (ESM); native `fetch`; Node 21+ recommended for WebSocket |

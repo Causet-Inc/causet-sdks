@@ -1,6 +1,6 @@
 {
   "name": "@causet/sdk-next",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Next.js helpers and React hooks for Causet",
   "type": "module",
   "main": "./dist/index.js",
@@ -46,7 +46,7 @@
     }
   },
   "dependencies": {
-    "@causet/sdk-core": "0.1.0"
+    "@causet/sdk-core": "0.2.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.0",

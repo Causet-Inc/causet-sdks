@@ -6,7 +6,7 @@
 
     <groupId>com.causet</groupId>
     <artifactId>causet-sdk</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <name>Causet Java SDK</name>
     <description>Java client for Causet runtime API — submit intents, state, WebSocket and SSE streaming</description>
 

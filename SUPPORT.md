@@ -16,7 +16,7 @@ The Causet SDKs are open source under the [MIT License](LICENSE). Support is pro
 
 ## What to include in an issue
 
-- SDK language and package name (for example `@causet/sdk` **0.1.0**)
+- SDK language and package name (for example `@causet/sdk` **0.2.0**)
 - Runtime version (Node.js, Python, Java, etc.)
 - Minimal reproduction steps or code sample
 - Expected vs actual behavior
@@ -24,7 +24,7 @@ The Causet SDKs are open source under the [MIT License](LICENSE). Support is pro
 
 ## Response expectations
 
-Maintainers triage issues on a **best-effort** basis. Published npm packages (`0.1.0`) receive priority for regressions and security fixes. Source-only SDKs (Python, Java, PHP, Go) are maintained in-tree but may have slower turnaround until they reach a public registry.
+Maintainers triage issues on a **best-effort** basis. Published npm packages (`0.2.0`) receive priority for regressions and security fixes. Source-only SDKs (Python, Java, PHP, Go) are maintained in-tree but may have slower turnaround until they reach a public registry.
 
 ## SDK status
 

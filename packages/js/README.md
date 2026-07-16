@@ -7,7 +7,7 @@ Browser and native **ESM JavaScript** SDK for [Causet](https://causet.cloud). Re
 | | |
 | --- | --- |
 | **Source** | Available ([`packages/js`](.)) |
-| **Package distribution** | Published to npm — `@causet/sdk` **0.1.0** |
+| **Package distribution** | Published to npm — `@causet/sdk` **0.2.0** |
 | **Maturity** | Supported preview |
 | **Support** | Supported for pilots — [GitHub Issues](https://github.com/Causet-Inc/causet-sdks/issues) |
 

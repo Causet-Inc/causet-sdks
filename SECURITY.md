@@ -6,7 +6,7 @@ Security fixes are provided for the **latest published release** of each package
 
 | Package | Registry | Currently published |
 |---------|----------|---------------------|
-| `@causet/sdk-core`, `@causet/sdk`, `@causet/sdk-node`, `@causet/sdk-next` | npm | Yes — **0.1.0** |
+| `@causet/sdk-core`, `@causet/sdk`, `@causet/sdk-node`, `@causet/sdk-next` | npm | Yes — **0.2.0** |
 | `causet-sdk` | PyPI | No — source only |
 | `com.causet:causet-sdk` | Maven Central | No — coming soon |
 | `github.com/causet-inc/causet-sdk-go` | Go modules | No — source only |

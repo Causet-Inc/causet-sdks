@@ -9,7 +9,7 @@ Built on [`@causet/sdk-core`](../core/README.md).
 | | |
 | --- | --- |
 | **Source** | Available ([`packages/next`](.)) |
-| **Package distribution** | Published to npm — `@causet/sdk-next` **0.1.0** |
+| **Package distribution** | Published to npm — `@causet/sdk-next` **0.2.0** |
 | **Maturity** | Supported preview |
 | **Support** | Supported for pilots |
 | **Runtime compatibility** | Next.js 14+; React 18+; Node.js 18+ |
